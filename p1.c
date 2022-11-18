@@ -1,13 +1,14 @@
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <sys/shm.h>
 #include <unistd.h>
 
 // BEGIN: Global Variables
 
 enum {
-    MAXN = 5,          // maximum size of any matrix
+    MAXN = 5,          // maximum dimension of any matrix
     MAXTHREADS = 1,    // maximum number of threads
 };
 
@@ -37,6 +38,7 @@ struct shmseg {
     int visitedCol[MAXN];         // marks columns of matrix Two as read from in2.txt
     int matrixOne[MAXN][MAXN];    // stores matrix read from in1.txt
     int matrixTwo[MAXN][MAXN];    // stores matrix read from in2.txt
+    char outputFile[505];
 };
 
 int shmid;              // stores the return value of shmget system call
@@ -104,6 +106,8 @@ int main(int argc, char* argv[]) {
     inputFileTwo = argv[5];
     outputFile = argv[6];
 
+    SHM_KEY = ftok("./p1.c", 0x2);
+
     shmid = shmget(SHM_KEY, sizeof(struct shmseg), 0644 | IPC_CREAT);
     if (shmid == -1) {
         perror("Shared memory");
@@ -115,6 +119,8 @@ int main(int argc, char* argv[]) {
         perror("Shared memory attach");
         exit(-1);
     }
+
+    strcpy(shmp->outputFile, outputFile);
 
     for (int z = 0; z < i + k; ++z) {
         int pos;
@@ -145,11 +151,6 @@ int main(int argc, char* argv[]) {
 
     if (shmdt(shmp) == -1) {
         perror("shmdt");
-        exit(-1);
-    }
-
-    if (shmctl(shmid, IPC_RMID, 0) == -1) {
-        perror("shmctl");
         exit(-1);
     }
 }
