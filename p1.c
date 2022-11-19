@@ -46,6 +46,13 @@ struct shmseg* shmp;    // stores pointer to shared memory
 
 // END: Shared Memory Variables
 
+
+
+void initialise(int curr[]){
+    for(int p=0;p<MAXN;p++)
+        curr[p]=0;
+}
+
 // BEGIN: Read rows from file in1.txt
 
 void readRowsFromFileOne(int R) {
@@ -75,18 +82,47 @@ void readRowsFromFileOne(int R) {
         fscanf(ptr, "%lld", &num);
         shmp->matrixOne[R][c] = num;
     }
+    shmp->visitedRow[R]=1;
     // optimization -> preprocess file to calculate offset for every row
 }
 
 // END: Read rows from file in1.txt
 
-// BEGIN: Read columns from file in2.txt
+// BEGIN: Read rows from file in1.txt
 
-void readColumnsFromFileTwo(int C) {
-    // Reads column C of matrix in in2.txt into matrixTwo[][C]
+void readRowsFromFileTwo(int R) {
+    // Reads row R of matrix in in1.txt into matrixOne[R][]
+    FILE *ptr;
+    ptr = fopen("in2.txt", "r");
+
+    if(ptr == NULL) {
+        printf("Error opening in2.txt\n");
+        exit(-1);
+    }
+
+    int rowCnt = 0;
+    char *line = NULL;
+    size_t len = 0;
+    ssize_t read;
+    while(rowCnt != R) {
+        read = getline(&line, &len, ptr);
+        rowCnt++;
+    }
+    
+    // global : SHM_KEY, shmid, shmp
+
+
+    long long num;
+    for(int c = 0; c < k; c++) {
+        fscanf(ptr, "%lld", &num);
+        shmp->matrixTwo[R][c] = num;
+    }
+    shmp->visitedCol[R]=1;
+    // optimization -> preprocess file to calculate offset for every row
 }
 
-// END: Read columns from file in2.txt
+// END: Read rows from file in1.txt
+
 
 // BEGIN: Common Thread Runner Function
 
@@ -110,15 +146,6 @@ void* runner(void* arg) {
 
 // END: Common Thread Runner Function
 
-// BEGIN: Find next free thread
-
-int findNextFreeThread() {
-    // returns index of next free thread from [0, MAXTHREADS) using threadID array
-    sleep(1);
-    return 0;
-}
-
-// END: Find next free thread
 
 int main(int argc, char* argv[]) {
     if (argc != 7) {
@@ -147,6 +174,9 @@ int main(int argc, char* argv[]) {
     }
 
     strcpy(shmp->outputFile, outputFile);
+
+    initialise(shmp->visitedCol);
+    initialise(shmp->visitedRow);
 
     for (int z = 0; z < i + k; ++z) {
         int pos;
@@ -180,3 +210,69 @@ int main(int argc, char* argv[]) {
         exit(-1);
     }
 }
+
+// int main(){
+
+//     /*if (argc != 7) {
+//         printf("Usage: ./p1 i j k in1.txt in2.txt out.txt\n");
+//         exit(-1);
+//     }
+//     i = atoi(argv[1]);
+//     j = atoi(argv[2]);
+//     k = atoi(argv[3]);
+//     inputFileOne = argv[4];
+//     inputFileTwo = argv[5];
+//     outputFile = argv[6];
+
+//     SHM_KEY = ftok("./p1.c", 0x2);*/
+
+//     i=4;
+//     j=4;
+//     k=3;
+
+//     shmid = shmget(SHM_KEY, sizeof(struct shmseg), 0644 | IPC_CREAT);
+//     if (shmid == -1) {
+//         perror("Shared memory");
+//         exit(-1);
+//     }
+
+//     shmp = shmat(shmid, NULL, 0);
+//     if (shmp == (void*) -1) {
+//         perror("Shared memory attach");
+//         exit(-1);
+//     }
+
+//     strcpy(shmp->outputFile, outputFile);
+
+//     initialise(shmp->visitedCol);
+//     initialise(shmp->visitedRow);
+
+
+//     readRowsFromFileTwo(2);
+//     readRowsFromFileTwo(1);
+//     readRowsFromFileTwo(0);
+//     readRowsFromFileTwo(3);
+//     readRowsFromFileOne(2);
+//     readRowsFromFileOne(1);
+//     readRowsFromFileOne(0);
+//     readRowsFromFileOne(3);
+
+//     for(int l=0;l<i;l++){
+//         for(int m=0;m<j;m++)
+//             printf("%d\t",shmp->matrixOne[l][m]);
+//         printf("\n");
+//     }
+//     printf("\n");
+//     for(int l=0;l<j;l++){
+//         for(int m=0;m<k;m++)
+//             printf("%d\t",shmp->matrixTwo[l][m]);
+//         printf("\n");
+//     }
+
+
+//     if (shmdt(shmp) == -1) {
+//         perror("shmdt");
+//         exit(-1);
+//     }
+
+// }
