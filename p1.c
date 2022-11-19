@@ -50,6 +50,32 @@ struct shmseg* shmp;    // stores pointer to shared memory
 
 void readRowsFromFileOne(int R) {
     // Reads row R of matrix in in1.txt into matrixOne[R][]
+    FILE *ptr;
+    ptr = fopen("in1.txt", "r");
+
+    if(ptr == NULL) {
+        printf("Error opening in1.txt\n");
+        exit(-1);
+    }
+
+    int rowCnt = 0;
+    char *line = NULL;
+    size_t len = 0;
+    ssize_t read;
+    while(rowCnt != R) {
+        read = getline(&line, &len, ptr);
+        rowCnt++;
+    }
+    
+    // global : SHM_KEY, shmid, shmp
+
+
+    long long num;
+    for(int c = 0; c < j; c++) {
+        fscanf(ptr, "%lld", &num);
+        shmp->matrixOne[R][c] = num;
+    }
+    // optimization -> preprocess file to calculate offset for every row
 }
 
 // END: Read rows from file in1.txt
