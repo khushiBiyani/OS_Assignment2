@@ -111,7 +111,15 @@ void readRowsFromFileTwo(int R) {
 void* runner(void* arg) {
     // Common runner function for MAXTHREADS threads
     int id = (int) arg;
-
+    while(id<I+J){//Skipgram approach skipping in steps of MaxNumber of Threads
+        if(id<J){// 0 1 2 3 0 1 2 3 4 5 6  We read first from file2 0 - 3 then from file1 0 to 6
+            readRowsFromFileTwo(id);
+        }
+        else{//then from file1 0 to 6
+            readRowsFromFileOne(id-J);
+        }
+        id+=MAXTHREADS;
+    }
     pthread_exit(NULL);
 }
 
