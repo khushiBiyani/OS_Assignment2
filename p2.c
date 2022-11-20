@@ -15,8 +15,6 @@ enum {
 
 // BEGIN: Shared Memory Variables
 
-int SHM_KEY;
-
 struct shmseg {
     int I;                        // rows in matrixOne
     int J;                        // columns in matrixOne == rows in matrixTwo
@@ -28,14 +26,13 @@ struct shmseg {
     char outputFile[505];
 };
 
-int shmid;              // stores the return value of shmget system call
 struct shmseg* shmp;    // stores pointer to shared memory
 
 // END: Shared Memory Variables
 
 int main() {
-    SHM_KEY = ftok("./p1.c", 0x2);
-    shmid = shmget(SHM_KEY, sizeof(struct shmseg), 0644 | IPC_CREAT);
+    int SHM_KEY = ftok("./p1.c", 0x2);
+    int shmid = shmget(SHM_KEY, sizeof(struct shmseg), 0644 | IPC_CREAT);
     if (shmid == -1) {
         perror("Shared memory");
         exit(-1);

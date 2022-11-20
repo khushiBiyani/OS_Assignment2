@@ -26,8 +26,6 @@ pthread_t threadID[MAXTHREADS];    // stores ThreadIDs of MAXTHREADS threads
 
 // BEGIN: Shared Memory Variables
 
-int SHM_KEY;
-
 struct shmseg {
     int I;                        // rows in matrixOne
     int J;                        // columns in matrixOne == rows in matrixTwo
@@ -39,12 +37,9 @@ struct shmseg {
     char outputFile[505];
 };
 
-int shmid;              // stores the return value of shmget system call
 struct shmseg* shmp;    // stores pointer to shared memory
 
 // END: Shared Memory Variables
-
-// BEGIN: Read rows from file in1.txt
 
 void readRowsFromFileOne(int R) {
     // Reads row R of matrix in in1.txt into matrixOne[R][]
@@ -73,10 +68,6 @@ void readRowsFromFileOne(int R) {
     shmp->visitedRowOne[R] = 1;
 }
 
-// END: Read rows from file in1.txt
-
-// BEGIN: Read rows from file in2.txt
-
 void readRowsFromFileTwo(int R) {
     // Reads row R of matrix in in2.txt into matrixTwo[R][]
     FILE* ptr;
@@ -104,26 +95,29 @@ void readRowsFromFileTwo(int R) {
     shmp->visitedRowTwo[R] = 1;
 }
 
-// END: Read rows from file in2.txt
-
-// BEGIN: Common Thread Runner Function
-
 void* runner(void* arg) {
-    // Common runner function for MAXTHREADS threads
+    /*
+        Common thread runner function which implements the Skipgram approach for
+        reading rows from the files.
+        Assume that file 2 has 4 rows: [0, 1, 2, 3] and file 1 has 7 rows: [0, 1, 2, 3, 4, 5, 6]
+        We first read from file 2: 0-3 and then from file 1: 0-6
+        Therefore, the tasks can be represented as:
+        Task: [0, 1, 2, 3, 0, 1, 2, 3, 4, 5, 6]
+        ID:   [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+        The first J tasks are row numbers of file 2, the next I tasks are file 1 row numbers.
+        If thread id is t, then the thread performs task ID(s) [t, t+MAXTHREADS, t+2*MAXTHREADS ....]
+    */
     int id = (int) arg;
-    while(id<I+J){//Skipgram approach skipping in steps of MaxNumber of Threads
-        if(id<J){// 0 1 2 3 0 1 2 3 4 5 6  We read first from file2 0 - 3 then from file1 0 to 6
+    while (id < I + J) {
+        if (id < J) {
             readRowsFromFileTwo(id);
+        } else {
+            readRowsFromFileOne(id - J);
         }
-        else{//then from file1 0 to 6
-            readRowsFromFileOne(id-J);
-        }
-        id+=MAXTHREADS;
+        id += MAXTHREADS;
     }
     pthread_exit(NULL);
 }
-
-// END: Common Thread Runner Function
 
 int main(int argc, char* argv[]) {
     if (argc != 7) {
@@ -137,8 +131,8 @@ int main(int argc, char* argv[]) {
     inputFileTwo = argv[5];
     outputFile = argv[6];
 
-    SHM_KEY = ftok("./p1.c", 0x2);
-    shmid = shmget(SHM_KEY, sizeof(struct shmseg), 0644 | IPC_CREAT);
+    int SHM_KEY = ftok("./p1.c", 0x2);
+    int shmid = shmget(SHM_KEY, sizeof(struct shmseg), 0644 | IPC_CREAT);
     if (shmid == -1) {
         perror("Shared memory");
         exit(-1);
