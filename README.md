@@ -4,6 +4,8 @@ Operating Systems (CS F372) Assignment (Post Midsem) @ BITS Pilani, Hyderabad Ca
 
 # Running Locally
 
+## p1.c
+
 To compile program 1, use the command: `gcc -pthread p1.c -o p1`
 
 To run program 1, use the command:
@@ -15,6 +17,18 @@ To run program 1, use the command:
 `in2.txt` contains a matrix of dimension $(j \times k)$
 
 `out.txt` contains a matrix of dimension $(i \times k)$ and is the product of the above $2$ matrices.
+
+## gen.py
+
+`python gen.py i j k`
+
+A generator for the following tasks:
+
+- A random matrix of size $(i \times j)$ into `in1.txt`
+
+- A random matrix of size $(j \times k)$ into `in2.txt`
+
+- Their matrix product into `genOut.txt`
 
 # Authors
 
