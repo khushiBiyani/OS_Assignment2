@@ -27,7 +27,7 @@ def make_plot():
     else:
         plt.ylabel('Time(in nanoseconds)')
     plt.title('Execution Time', fontsize=21)
-    # plt.grid() 
+    # plt.grid()
     plt.show()
 
 if __name__ == "__main__":
