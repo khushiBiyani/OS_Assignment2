@@ -16,9 +16,7 @@
  \_____|_|\___/|_.__/ \__,_|_|     \/ \__,_|_|  |_|\__,_|_.__/|_|\___||___/
 */
 
-enum {
-    MAXTHREADS = 50,    // maximum number of threads
-};
+int MAXTHREADS = 1;    // number of threads spawned
 
 int I;    // Row size of matrix in in1.txt
 int J;    // Col size of matrix in in1.txt = Row size of matrix in in2.txt
@@ -28,7 +26,7 @@ char* inputFileOne;    // contains name of in1.txt
 char* inputFileTwo;    // contains name of in2.txt
 char* outputFile;      // contains name of out.txt
 
-pthread_t threadID[MAXTHREADS];    // stores ThreadIDs of MAXTHREADS threads
+pthread_t* threadID;    // stores ThreadIDs of MAXTHREADS threads
 
 /*
   _____ _                        _   __  __
@@ -273,14 +271,14 @@ void* runner(void* arg) {
 }
 
 /*
-  _______ _                                                      _             
- |__   __(_)                                                    (_)            
-    | |   _ _ __ ___   ___   _ __ ___   ___  __ _ ___ _   _ _ __ _ _ __   __ _ 
+  _______ _                                                      _
+ |__   __(_)                                                    (_)
+    | |   _ _ __ ___   ___   _ __ ___   ___  __ _ ___ _   _ _ __ _ _ __   __ _
     | |  | | '_ ` _ \ / _ \ | '_ ` _ \ / _ \/ _` / __| | | | '__| | '_ \ / _` |
     | |  | | | | | | |  __/ | | | | | |  __/ (_| \__ \ |_| | |  | | | | | (_| |
     |_|  |_|_| |_| |_|\___| |_| |_| |_|\___|\__,_|___/\__,_|_|  |_|_| |_|\__, |
                                                                           __/ |
-                                                                         |___/ 
+                                                                         |___/
 */
 
 static long long getCurrentTime(void) {
@@ -299,16 +297,21 @@ static long long getCurrentTime(void) {
 */
 
 int main(int argc, char* argv[]) {
-    if (argc != 7) {
-        printf("Usage: ./p1 i j k in1.txt in2.txt out.txt\n");
+    if (argc != 7 && argc != 8) {
+        printf("Usage: ./p1 i j k in1.txt in2.txt out.txt [MAXTHREADS]\n");
         exit(-1);
     }
+
     I = atoi(argv[1]);
     J = atoi(argv[2]);
     K = atoi(argv[3]);
     inputFileOne = argv[4];
     inputFileTwo = argv[5];
     outputFile = argv[6];
+    if (argc == 8) {
+        MAXTHREADS = atoi(argv[7]);
+    }
+    threadID = (pthread_t*) malloc(MAXTHREADS * sizeof(pthread_t));
 
     createSharedMemory();
 
@@ -329,7 +332,7 @@ int main(int argc, char* argv[]) {
 
     long long diff = getCurrentTime() - startTime;
 
-    printf("With %d threads, time taken: %lld nanoseconds\n", MAXTHREADS, diff);
+    printf("%d,%lld\n", MAXTHREADS, diff);
 
     detachSharedMemory();
 }
