@@ -42,6 +42,13 @@ A generator for the following tasks:
 
 - Their matrix product into `genOut.txt`
 
+## plot.py
+
+`python plot.py <csvfile-name>.csv`
+
+Program to make scatter plot for the input CSV file.
+
+
 # Authors
 
 - [Khushi Biyani](https://www.github.com/?)
