@@ -46,6 +46,7 @@ A generator for the following tasks:
 
 - [Khushi Biyani](https://www.github.com/?)
 - [Manik Arneja](https://www.github.com/?)
+- [Ankesh Pandey](https://www.github.com/?)
 - [Khooshrin Aspi Pithawalla](https://www.github.com/?)
 - [Kavyanjali Agnihotri](https://www.github.com/?)
 - [Tushar Brijesh Chenan](https://www.github.com/?)
