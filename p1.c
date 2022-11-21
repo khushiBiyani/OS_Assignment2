@@ -26,6 +26,9 @@ char* inputFileOne;    // contains name of in1.txt
 char* inputFileTwo;    // contains name of in2.txt
 char* outputFile;      // contains name of out.txt
 
+int* preprocessedMatrixOne;    // stores the pre-read matrix from in1.txt
+int* preprocessedMatrixTwo;    // stores the pre-read matrix from in2.txt
+
 pthread_t* threadID;    // stores ThreadIDs of MAXTHREADS threads
 
 /*
@@ -182,50 +185,62 @@ void detachSharedMemory() {
 |_|   \__,_|_| |_|\___|\__|_|\___/|_| |_|___/
 */
 
-void readRowsFromFileOne(int R) {
+void preprocessFileOne() {
     FILE* ptr = fopen(inputFileOne, "r");
     if (ptr == NULL) {
         printf("Error opening %s\n", inputFileOne);
         exit(-1);
     }
-
-    int rowCnt = 0;
+    int numRead = 0;
+    int currentRow = 0;
     char* line = NULL;
     size_t len = 0;
     ssize_t read;
-    while (rowCnt != R) {
+    while (numRead < I * J) {
+        for (int i = 0; i < J; i++) {
+            int num;
+            fscanf(ptr, "%d", &num);
+            preprocessedMatrixOne[currentRow * J + i] = num;
+            ++numRead;
+        }
+        ++currentRow;
         read = getline(&line, &len, ptr);
-        rowCnt++;
     }
-
-    int num;
-    for (int i = 0; i < J; i++) {
-        fscanf(ptr, "%d", &num);
-        matrixOne[R * J + i] = num;
-    }
-    visitedRowOne[R] = 1;
 }
 
-void readRowsFromFileTwo(int R) {
+void preprocessFileTwo() {
     FILE* ptr = fopen(inputFileTwo, "r");
     if (ptr == NULL) {
         printf("Error opening %s\n", inputFileTwo);
         exit(-1);
     }
-
-    int rowCnt = 0;
+    int numRead = 0;
+    int currentRow = 0;
     char* line = NULL;
     size_t len = 0;
     ssize_t read;
-    while (rowCnt != R) {
+    while (numRead < J * K) {
+        for (int i = 0; i < K; i++) {
+            int num;
+            fscanf(ptr, "%d", &num);
+            preprocessedMatrixTwo[currentRow * K + i] = num;
+            ++numRead;
+        }
+        ++currentRow;
         read = getline(&line, &len, ptr);
-        rowCnt++;
     }
+}
 
-    int num;
+void readRowsFromFileOne(int R) {
+    for (int i = 0; i < J; i++) {
+        matrixOne[R * J + i] = preprocessedMatrixOne[R * J + i];
+    }
+    visitedRowOne[R] = 1;
+}
+
+void readRowsFromFileTwo(int R) {
     for (int i = 0; i < K; i++) {
-        fscanf(ptr, "%d", &num);
-        matrixTwo[R * K + i] = num;
+        matrixTwo[R * K + i] = preprocessedMatrixTwo[R * K + i];
     }
     visitedRowTwo[R] = 1;
 }
@@ -305,6 +320,8 @@ int main(int argc, char* argv[]) {
     I = atoi(argv[1]);
     J = atoi(argv[2]);
     K = atoi(argv[3]);
+    preprocessedMatrixOne = (int*) malloc(I * J * sizeof(int));
+    preprocessedMatrixTwo = (int*) malloc(J * K * sizeof(int));
     inputFileOne = argv[4];
     inputFileTwo = argv[5];
     outputFile = argv[6];
@@ -314,11 +331,13 @@ int main(int argc, char* argv[]) {
     threadID = (pthread_t*) malloc(MAXTHREADS * sizeof(pthread_t));
 
     createSharedMemory();
-
     shmp->I = I;
     shmp->J = J;
     shmp->K = K;
     strcpy(shmp->outputFile, outputFile);
+
+    preprocessFileOne();
+    preprocessFileTwo();
 
     long long startTime = getCurrentTime();
 
