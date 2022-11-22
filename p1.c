@@ -26,6 +26,9 @@ char* inputFileOne;    // contains name of in1.txt
 char* inputFileTwo;    // contains name of in2.txt
 char* outputFile;      // contains name of out.txt
 
+int* offsetFileOne;    // stores pre-processed row offsets for in1.txt
+int* offsetFileTwo;    // stores pre-processed row offsets for in2.txt
+
 pthread_t* threadID;    // stores ThreadIDs of MAXTHREADS threads
 
 /*
@@ -57,10 +60,10 @@ struct shmseg* shmp;
     (i/m, i%m)
 */
 
-int* visitedRowOne;    // marks rows of matrixOne as read from in1.txt
-int* visitedRowTwo;    // marks rows of matrixTwo as read from in2.txt
-int* matrixOne;        // stores matrix read from in1.txt
-int* matrixTwo;        // stores matrix read from in2.txt
+int* visitedRowOne;       // marks rows of matrixOne as read from in1.txt
+int* visitedColumnTwo;    // marks rows of matrixTwo as read from in2.txt
+int* matrixOne;           // stores matrix read from in1.txt
+int* matrixTwo;           // stores matrix read from in2.txt
 
 void createSharedMemory() {
     int SHM_KEY, shmid;
@@ -92,19 +95,19 @@ void createSharedMemory() {
     }
     memset(visitedRowOne, 0, I * sizeof(int));
 
-    // Third shared memory segment - stores visitedRowTwo
+    // Third shared memory segment - stores visitedColumnTwo
     SHM_KEY = ftok("./p1.c", 0x3);
     shmid = shmget(SHM_KEY, J * sizeof(int), 0644 | IPC_CREAT);
     if (shmid == -1) {
         perror("Shared memory");
         exit(-1);
     }
-    visitedRowTwo = (int*) shmat(shmid, NULL, 0);
-    if (visitedRowTwo == (void*) -1) {
+    visitedColumnTwo = (int*) shmat(shmid, NULL, 0);
+    if (visitedColumnTwo == (void*) -1) {
         perror("Shared memory attach");
         exit(-1);
     }
-    memset(visitedRowTwo, 0, J * sizeof(int));
+    memset(visitedColumnTwo, 0, J * sizeof(int));
 
     // Fourth shared memory segment - stores matrixOne
     SHM_KEY = ftok("./p1.c", 0x4);
@@ -147,7 +150,7 @@ void detachSharedMemory() {
     }
 
     // Detaches from third shared memory segment
-    if (shmdt(visitedRowTwo) == -1) {
+    if (shmdt(visitedColumnTwo) == -1) {
         perror("shmdt");
         exit(-1);
     }
@@ -182,52 +185,80 @@ void detachSharedMemory() {
 |_|   \__,_|_| |_|\___|\__|_|\___/|_| |_|___/
 */
 
-void readRowsFromFileOne(int R) {
-    FILE* ptr = fopen(inputFileOne, "r");
-    if (ptr == NULL) {
+void preProcessFileOne() {
+    FILE* fptr = fopen(inputFileOne, "r");
+    if (fptr == NULL) {
         printf("Error opening %s\n", inputFileOne);
         exit(-1);
     }
 
-    int rowCnt = 0;
     char* line = NULL;
     size_t len = 0;
-    ssize_t read;
-    while (rowCnt != R) {
-        read = getline(&line, &len, ptr);
-        rowCnt++;
+    size_t runningSum = 0;
+
+    for (int i = 0; i < I; ++i) {
+        offsetFileOne[i] = runningSum;
+        getline(&line, &len, fptr);
+        runningSum += strlen(line);
     }
+
+    fclose(fptr);
+}
+
+void readRowsFromFileOne(int R) {
+    FILE* fptr = fopen(inputFileOne, "r");
+    if (fptr == NULL) {
+        printf("Error opening %s\n", inputFileOne);
+        exit(-1);
+    }
+
+    fseek(fptr, offsetFileOne[R], SEEK_SET);
 
     int num;
     for (int i = 0; i < J; i++) {
-        fscanf(ptr, "%d", &num);
+        fscanf(fptr, "%d", &num);
         matrixOne[R * J + i] = num;
     }
     visitedRowOne[R] = 1;
+
+    fclose(fptr);
 }
 
-void readRowsFromFileTwo(int R) {
-    FILE* ptr = fopen(inputFileTwo, "r");
-    if (ptr == NULL) {
+void preProcessFileTwo() {
+    FILE* fptr = fopen(inputFileTwo, "r");
+    if (fptr == NULL) {
         printf("Error opening %s\n", inputFileTwo);
         exit(-1);
     }
 
-    int rowCnt = 0;
     char* line = NULL;
     size_t len = 0;
-    ssize_t read;
-    while (rowCnt != R) {
-        read = getline(&line, &len, ptr);
-        rowCnt++;
+    size_t runningSum = 0;
+
+    for (int i = 0; i < J; ++i) {
+        offsetFileTwo[i] = runningSum;
+        getline(&line, &len, fptr);
+        runningSum += strlen(line);
     }
 
-    int num;
+    fclose(fptr);
+}
+
+void readRowsFromFileTwo(int R) {
+    FILE* fptr = fopen(inputFileTwo, "r");
+    if (fptr == NULL) {
+        printf("Error opening %s\n", inputFileTwo);
+        exit(-1);
+    }
+
+    fseek(fptr, offsetFileTwo[R], SEEK_SET);
+
     for (int i = 0; i < K; i++) {
-        fscanf(ptr, "%d", &num);
+        int num;
+        fscanf(fptr, "%d", &num);
         matrixTwo[R * K + i] = num;
     }
-    visitedRowTwo[R] = 1;
+    visitedColumnTwo[R] = 1;
 }
 
 /*
@@ -303,6 +334,7 @@ int main(int argc, char* argv[]) {
     }
 
     I = atoi(argv[1]);
+    // TODO: Account for swapping J and K because of transpose.py
     J = atoi(argv[2]);
     K = atoi(argv[3]);
     inputFileOne = argv[4];
@@ -311,14 +343,19 @@ int main(int argc, char* argv[]) {
     if (argc == 8) {
         MAXTHREADS = atoi(argv[7]);
     }
+
     threadID = (pthread_t*) malloc(MAXTHREADS * sizeof(pthread_t));
+    offsetFileOne = (int*) malloc(I * sizeof(int));
+    offsetFileTwo = (int*) malloc(J * sizeof(int));
 
     createSharedMemory();
-
     shmp->I = I;
     shmp->J = J;
     shmp->K = K;
     strcpy(shmp->outputFile, outputFile);
+
+    preProcessFileOne();
+    preProcessFileTwo();
 
     long long startTime = getCurrentTime();
 
@@ -334,5 +371,8 @@ int main(int argc, char* argv[]) {
 
     printf("%d,%lld\n", MAXTHREADS, diff);
 
+    free(threadID);
+    free(offsetFileOne);
+    free(offsetFileTwo);
     detachSharedMemory();
 }
