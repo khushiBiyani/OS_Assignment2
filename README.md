@@ -2,15 +2,13 @@
 
 Operating Systems (CS F372) Assignment (Post Midsem) @ BITS Pilani, Hyderabad Campus
 
-# Running Locally
+# C Programs
 
-## p1.c
+### p1.c
 
 To compile program $1$, use the command: `gcc -pthread p1.c -o p1`
 
-To run program $1$, use the command:
-
-`./p1 i j k in1.txt in2.txt out.txt [MAXTHREADS]`
+To run program $1$, use the command: `./p1 i j k in1.txt in2.txt out.txt [MAXTHREADS]`
 
 `in1.txt` contains a matrix of dimension $(i \times j)$
 
@@ -20,19 +18,19 @@ To run program $1$, use the command:
 
 `MAXTHREADS` is an **optional argument** which defaults to $1$ and indicates the number of threads **spawned** by `p1`.
 
-## p2.c
+### p2.c
 
 To compile program $2$, use the command: `gcc p2.c -o p2`
 
-To run program $2$, use the command:
-
-`./p2`
+To run program $2$, use the command: `./p2`
 
 Currently, `p2` reads the $2$ matrices from the shared memory segment.
 
-## gen.py
+# Python Scripts
 
-`python gen.py i j k`
+### gen.py
+
+To run program $gen.py$, use the command: `python scripts/gen.py i j k`
 
 A generator for the following tasks:
 
@@ -42,12 +40,29 @@ A generator for the following tasks:
 
 - Their matrix product into `genOut.txt`
 
-## plot.py
+### transpose.py
 
-`python plot.py <csvfile-name>.csv`
+To run program $transpose.py$, use the command: `python scripts/transpose.py`
 
-Program to make scatter plot for the input CSV file.
+### singleRun.py
 
+To run program $singleRun.py$, use the command: `python scripts/singleRun.py i j k`
+
+Here $i$, $j$ and $k$ denote the dimensions of the matrices in `in1.txt` and `in2.txt`.
+
+`singleRun.py` automates running just `p1` and `p2` against the inputs `i, j, k`.
+
+### runnerP1.py
+
+To run program $runnerP1.py$, use the command: `python scripts/runnerP1.py`
+
+Automates the running of `p1.c` against given input files `in1.txt` and `in2.txt`, going over all thread values $t$ such that $1 \le t \le i+j$.
+
+### plot.py
+
+To run program $plot.py$, use the command: `python scripts/plot.py <csvfile-name>.csv`
+
+Generates a scatter plot for the input CSV file.
 
 # Authors
 
