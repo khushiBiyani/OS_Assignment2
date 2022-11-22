@@ -25,7 +25,7 @@ for row in transpose_matrix:
 # Calculating number of rows in both files for max value of threads to create
 
 with open("in2.txt", 'r') as file:
-    for row2, line in enumerate(file):
+    for col2, line in enumerate(file):
         pass
 
 with open("in1.txt", 'r') as file:
@@ -36,14 +36,14 @@ file.close()
 
 # Begin of Thread Count Iteration
 row1 = row1 + 1
-row2 = row2 + 1
+col2 = col2 + 1
 col1 = col1 + 1
 subprocess.call(["gcc", "-pthread","p1.c","-o", "p1"])
 curr_thread_cnt=1
-while (curr_thread_cnt <= row1+row2):
+while (curr_thread_cnt <= row1+col2):
     #cmd = "./p1.out "+ str(row1) + " " + str(col1) + " " + str(row2) +" in1.txt in2.txt out.txt "+ str(curr_thread_cnt)
     #tmp=subprocess.call([cmd])
-    tmp=subprocess.call(["./p1",str(row1),str(col1),str(row2),"in1.txt","in2.txt","out.txt",str(curr_thread_cnt)])
+    tmp=subprocess.call(["./p1",str(row1),str(col1),str(col2),"in1.txt","in2.txt","out.txt",str(curr_thread_cnt)])
     curr_thread_cnt = curr_thread_cnt + 1
 
 # End of Thread Count Iteration
