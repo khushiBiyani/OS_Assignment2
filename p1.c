@@ -1,4 +1,5 @@
 #include <pthread.h>
+#include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -6,7 +7,6 @@
 #include <sys/shm.h>
 #include <time.h>
 #include <unistd.h>
-
 /*
   _____ _       _           _  __      __        _       _     _
  / ____| |     | |         | | \ \    / /       (_)     | |   | |
@@ -16,15 +16,17 @@
  \_____|_|\___/|_.__/ \__,_|_|     \/ \__,_|_|  |_|\__,_|_.__/|_|\___||___/
 */
 
-int MAXTHREADS = 1;    // number of threads spawned
-
-int I;    // Row size of matrix in in1.txt
-int J;    // Col size of matrix in in1.txt = Row size of matrix in in2.txt
-int K;    // Col size of matrix in in2.txt
-
-char* inputFileOne;    // contains name of in1.txt
-char* inputFileTwo;    // contains name of in2.txt
-char* outputFile;      // contains name of out.txt
+int MAXTHREADS = 1;      // number of threads spawned
+pthread_mutex_t lock;    // lock as always
+int I;                   // Row size of matrix in in1.txt
+int J;                   // Col size of matrix in in1.txt = Row size of matrix in in2.txt
+int K;                   // Col size of matrix in in2.txt
+int pRow = 0;            // Tracking to be read present row
+int pCol = 0;            // Tracking to be read present column
+bool parity = false;     // Tracking Parity to ensure RCRCRCCCC or RCRCRRRR execution to balance load
+char* inputFileOne;      // contains name of in1.txt
+char* inputFileTwo;      // contains name of in2.txt
+char* outputFile;        // contains name of out.txt
 
 pthread_t* threadID;    // stores ThreadIDs of MAXTHREADS threads
 
@@ -69,6 +71,7 @@ void createSharedMemory() {
     SHM_KEY = ftok("./p1.c", 0x1);
     shmid = shmget(SHM_KEY, sizeof(struct shmseg), 0644 | IPC_CREAT);
     if (shmid == -1) {
+        //printf("Error1");
         perror("Shared memory");
         exit(-1);
     }
@@ -82,6 +85,7 @@ void createSharedMemory() {
     SHM_KEY = ftok("./p1.c", 0x2);
     shmid = shmget(SHM_KEY, I * sizeof(int), 0644 | IPC_CREAT);
     if (shmid == -1) {
+        //printf("Error2");
         perror("Shared memory");
         exit(-1);
     }
@@ -94,8 +98,11 @@ void createSharedMemory() {
 
     // Third shared memory segment - stores visitedRowTwo
     SHM_KEY = ftok("./p1.c", 0x3);
+    //printf("%d",SHM_KEY);
+    //printf("J = %d\n",J);
     shmid = shmget(SHM_KEY, J * sizeof(int), 0644 | IPC_CREAT);
     if (shmid == -1) {
+        //printf("Error3\n");
         perror("Shared memory");
         exit(-1);
     }
@@ -110,11 +117,13 @@ void createSharedMemory() {
     SHM_KEY = ftok("./p1.c", 0x4);
     shmid = shmget(SHM_KEY, I * J * sizeof(int), 0644 | IPC_CREAT);
     if (shmid == -1) {
+        //printf("Error4");
         perror("Shared memory");
         exit(-1);
     }
     matrixOne = (int*) shmat(shmid, NULL, 0);
     if (matrixOne == (void*) -1) {
+        //printf("Error5");
         perror("Shared memory attach");
         exit(-1);
     }
@@ -245,27 +254,36 @@ void readRowsFromFileTwo(int R) {
 | |  | |_| | | | | (__| |_| | (_) | | | |
 |_|   \__,_|_| |_|\___|\__|_|\___/|_| |_|
 */
-
-/*
-    Common thread runner function which implements the Skipgram approach for
-    reading rows from the files.
-    Assume that file 2 has 4 rows: [0, 1, 2, 3] and file 1 has 7 rows: [0, 1, 2, 3, 4, 5, 6]
-    We first read from file 2: 0-3 and then from file 1: 0-6
-    Therefore, the tasks can be represented as:
-    Task: [0, 1, 2, 3, 0, 1, 2, 3, 4, 5, 6]
-    ID:   [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-    The first J tasks are row numbers of file 2, the next I tasks are file 1 row numbers.
-    If thread id is t, then the thread performs task ID(s) [t, t+MAXTHREADS, t+2*MAXTHREADS ....]
-*/
 void* runner(void* arg) {
     int id = (uintptr_t) arg;
-    while (id < I + J) {
-        if (id < J) {
-            readRowsFromFileTwo(id);
+    while (pRow < I || pCol < J) {
+        
+        pthread_mutex_lock(&lock);
+        parity = !parity;
+        if (parity) {
+            if (pRow < I) {
+                //printf("R %d \n", pRow);
+                readRowsFromFileOne(pRow++);
+            } else if (pCol < J) {
+                //printf("C %d \n", pCol);
+                readRowsFromFileTwo(pCol++);
+            } else {
+                pthread_mutex_unlock(&lock);
+                pthread_exit(NULL);
+            }
         } else {
-            readRowsFromFileOne(id - J);
+            if (pCol < J) {
+                //printf("C %d \n", pCol);
+                readRowsFromFileTwo(pCol++);
+            } else if (pRow < I) {
+                //printf("R %d \n", pRow);
+                readRowsFromFileOne(pRow++);
+            } else {
+                pthread_mutex_unlock(&lock);
+                pthread_exit(NULL);
+            }
         }
-        id += MAXTHREADS;
+        pthread_mutex_unlock(&lock);
     }
     pthread_exit(NULL);
 }
@@ -301,7 +319,8 @@ int main(int argc, char* argv[]) {
         printf("Usage: ./p1 i j k in1.txt in2.txt out.txt [MAXTHREADS]\n");
         exit(-1);
     }
-
+    // for(int i=0;i<argc;i++)
+    //     printf("%s\n",argv[i]);
     I = atoi(argv[1]);
     J = atoi(argv[2]);
     K = atoi(argv[3]);
@@ -319,9 +338,12 @@ int main(int argc, char* argv[]) {
     shmp->J = J;
     shmp->K = K;
     strcpy(shmp->outputFile, outputFile);
-
+    if (pthread_mutex_init(&lock, NULL) != 0) {
+        printf("\n mutex init has failed\n");
+        return 1;
+    }
     long long startTime = getCurrentTime();
-
+    //printf("Starting creating threads\n");
     for (int i = 0; i < MAXTHREADS; ++i) {
         pthread_create(&threadID[i], NULL, runner, (void*) (uintptr_t) i);
     }
@@ -332,7 +354,15 @@ int main(int argc, char* argv[]) {
 
     long long diff = getCurrentTime() - startTime;
 
-    printf("%d,%lld\n", MAXTHREADS, diff);
+    //printf("%d,%lld\n", MAXTHREADS, diff);
+
+    // Writing number of threads and time in nanoseconds into csv file
+
+    FILE *fpt;
+    fpt = fopen("./scripts/p1.csv", "a");
+
+    fprintf(fpt,"%d, %lld\n", MAXTHREADS, diff);
+    fclose(fpt);
 
     detachSharedMemory();
 }

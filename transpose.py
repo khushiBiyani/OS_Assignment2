@@ -1,0 +1,49 @@
+import numpy as np
+import subprocess
+
+# Reading the matrix from file 2
+input_matrix = np.loadtxt("in2.txt", dtype="i")
+
+with open("in2.txt", 'r') as file:
+    for col1, line in enumerate(file):
+        pass
+
+# Tranposing the matrix
+transpose_matrix = input_matrix.transpose()
+
+# Saving the array in a text file
+file = open("in2.txt", "w")
+for row in transpose_matrix:
+    for element in row:
+        file.write(str(element))
+        file.write(" ")
+    file.write("\n")
+
+
+# End of file transpose
+
+# Calculating number of rows in both files for max value of threads to create
+
+with open("in2.txt", 'r') as file:
+    for row2, line in enumerate(file):
+        pass
+
+with open("in1.txt", 'r') as file:
+    for row1, line in enumerate(file):
+        pass
+
+file.close()
+
+# Begin of Thread Count Iteration
+row1 = row1 + 1
+row2 = row2 + 1
+col1 = col1 + 1
+subprocess.call(["gcc", "-pthread","p1.c","-o", "p1"])
+curr_thread_cnt=1
+while (curr_thread_cnt <= row1+row2):
+    #cmd = "./p1.out "+ str(row1) + " " + str(col1) + " " + str(row2) +" in1.txt in2.txt out.txt "+ str(curr_thread_cnt)
+    #tmp=subprocess.call([cmd])
+    tmp=subprocess.call(["./p1",str(row1),str(col1),str(row2),"in1.txt","in2.txt","out.txt",str(curr_thread_cnt)])
+    curr_thread_cnt = curr_thread_cnt + 1
+
+# End of Thread Count Iteration
