@@ -15,8 +15,8 @@
 */
 
 int I;    // Row size of matrix in in1.txt
-int J;    // Col size of matrix in in1.txt = Row size of matrix in in2.txt
-int K;    // Col size of matrix in in2.txt
+int J;    // Col size of matrix in in1.txt == Col size of matrix in in2.txt
+int K;    // Row size of matrix in in2.txt
 char outputFile[100];
 
 /*
@@ -31,9 +31,9 @@ char outputFile[100];
 */
 
 struct shmseg {
-    int I;    // rows in matrixOne
-    int J;    // columns in matrixOne == rows in matrixTwo
-    int K;    // columns in matrixTwo
+    int I;    // Row size of matrixOne
+    int J;    // Col size of matrixOne == Col size of matrixTwo
+    int K;    // Row size of matrixTwo
     char outputFile[100];
 };
 struct shmseg* shmp;
@@ -61,7 +61,6 @@ void connectSharedMemory() {
     // Second shared memory segment - stores visitedRowOne
     SHM_KEY = ftok("./p1.c", 0x2);
     shmid = shmget(SHM_KEY, shmp->I * sizeof(int), 0644);
-
     if (shmid == -1) {
         perror("Shared memory");
         exit(-1);
@@ -74,7 +73,7 @@ void connectSharedMemory() {
 
     // Third shared memory segment - stores visitedRowTwo
     SHM_KEY = ftok("./p1.c", 0x3);
-    shmid = shmget(SHM_KEY, shmp->J * sizeof(int), 0644);
+    shmid = shmget(SHM_KEY, shmp->K * sizeof(int), 0644);
     if (shmid == -1) {
         perror("Shared memory");
         exit(-1);
@@ -100,7 +99,7 @@ void connectSharedMemory() {
 
     //  Fifth shared memory segment - stores matrixTwo
     SHM_KEY = ftok("./p1.c", 0x5);
-    shmid = shmget(SHM_KEY, shmp->J * shmp->K * sizeof(int), 0644);
+    shmid = shmget(SHM_KEY, shmp->K * shmp->J * sizeof(int), 0644);
     if (shmid == -1) {
         perror("Shared memory");
         exit(-1);
@@ -139,7 +138,7 @@ void destroySharedMemory() {
 
     // Destroys third shared memory segment
     SHM_KEY = ftok("./p1.c", 0x3);
-    shmid = shmget(SHM_KEY, J * sizeof(int), 0644);
+    shmid = shmget(SHM_KEY, K * sizeof(int), 0644);
     if (shmdt(visitedRowTwo) == -1) {
         perror("shmdt");
         exit(-1);
@@ -163,7 +162,7 @@ void destroySharedMemory() {
 
     // Destroys fifth shared memory segment
     SHM_KEY = ftok("./p1.c", 0x5);
-    shmid = shmget(SHM_KEY, J * K * sizeof(int), 0644);
+    shmid = shmget(SHM_KEY, K * J * sizeof(int), 0644);
     if (shmdt(matrixTwo) == -1) {
         perror("shmdt");
         exit(-1);
@@ -185,7 +184,6 @@ void destroySharedMemory() {
 
 int main() {
     connectSharedMemory();
-
     I = shmp->I;
     J = shmp->J;
     K = shmp->K;
@@ -199,10 +197,10 @@ int main() {
         printf("\n");
     }
 
-    printf("Matrix two size: %d X %d\n", J, K);
-    for (int j = 0; j < J; ++j) {
-        for (int k = 0; k < K; ++k) {
-            printf("%d ", matrixTwo[j * K + k]);
+    printf("Matrix two size: %d X %d\n", K, J);
+    for (int i = 0; i < K; ++i) {
+        for (int j = 0; j < J; ++j) {
+            printf("%d ", matrixTwo[i * J + j]);
         }
         printf("\n");
     }

@@ -1,4 +1,5 @@
 #include <pthread.h>
+#include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -19,8 +20,8 @@
 int MAXTHREADS = 1;    // number of threads spawned
 
 int I;    // Row size of matrix in in1.txt
-int J;    // Col size of matrix in in1.txt = Row size of matrix in in2.txt
-int K;    // Col size of matrix in in2.txt
+int J;    // Col size of matrix in in1.txt == Col size of matrix in in2.txt
+int K;    // Row size of matrix in in2.txt
 
 char* inputFileOne;    // contains name of in1.txt
 char* inputFileTwo;    // contains name of in2.txt
@@ -28,6 +29,11 @@ char* outputFile;      // contains name of out.txt
 
 int* offsetFileOne;    // stores pre-processed row offsets for in1.txt
 int* offsetFileTwo;    // stores pre-processed row offsets for in2.txt
+
+pthread_mutex_t lock;     // lock as always
+int currentRowOne = 0;    // Tracking to be read present row from in1.txt
+int currentRowTwo = 0;    // Tracking to be read present row from in2.txt
+bool parity = false;      // Tracking Parity to ensure RCRCRCCCC or RCRCRRRR execution to balance load
 
 pthread_t* threadID;    // stores ThreadIDs of MAXTHREADS threads
 
@@ -42,14 +48,6 @@ pthread_t* threadID;    // stores ThreadIDs of MAXTHREADS threads
                                                                       |___/
 */
 
-struct shmseg {
-    int I;    // rows in matrixOne
-    int J;    // columns in matrixOne == rows in matrixTwo
-    int K;    // columns in matrixTwo
-    char outputFile[100];
-};
-struct shmseg* shmp;
-
 /*
     We are storing 2D matrices matrixOne and matrixTwo as linear arrays.
 
@@ -59,6 +57,14 @@ struct shmseg* shmp;
     Similarly, a linear 1D array index of i gets mapped into 2D coordinates of
     (i/m, i%m)
 */
+
+struct shmseg {
+    int I;    // Row size of matrixOne
+    int J;    // Col size of matrixOne == Col size of matrixTwo
+    int K;    // Row size of matrixTwo
+    char outputFile[100];
+};
+struct shmseg* shmp;
 
 int* visitedRowOne;       // marks rows of matrixOne as read from in1.txt
 int* visitedColumnTwo;    // marks rows of matrixTwo as read from in2.txt
@@ -97,7 +103,7 @@ void createSharedMemory() {
 
     // Third shared memory segment - stores visitedColumnTwo
     SHM_KEY = ftok("./p1.c", 0x3);
-    shmid = shmget(SHM_KEY, J * sizeof(int), 0644 | IPC_CREAT);
+    shmid = shmget(SHM_KEY, K * sizeof(int), 0644 | IPC_CREAT);
     if (shmid == -1) {
         perror("Shared memory");
         exit(-1);
@@ -107,7 +113,7 @@ void createSharedMemory() {
         perror("Shared memory attach");
         exit(-1);
     }
-    memset(visitedColumnTwo, 0, J * sizeof(int));
+    memset(visitedColumnTwo, 0, K * sizeof(int));
 
     // Fourth shared memory segment - stores matrixOne
     SHM_KEY = ftok("./p1.c", 0x4);
@@ -124,7 +130,7 @@ void createSharedMemory() {
 
     //  Fifth shared memory segment - stores matrixTwo
     SHM_KEY = ftok("./p1.c", 0x5);
-    shmid = shmget(SHM_KEY, J * K * sizeof(int), 0644 | IPC_CREAT);
+    shmid = shmget(SHM_KEY, K * J * sizeof(int), 0644 | IPC_CREAT);
     if (shmid == -1) {
         perror("Shared memory");
         exit(-1);
@@ -235,7 +241,7 @@ void preProcessFileTwo() {
     size_t len = 0;
     size_t runningSum = 0;
 
-    for (int i = 0; i < J; ++i) {
+    for (int i = 0; i < K; ++i) {
         offsetFileTwo[i] = runningSum;
         getline(&line, &len, fptr);
         runningSum += strlen(line);
@@ -253,12 +259,14 @@ void readRowsFromFileTwo(int R) {
 
     fseek(fptr, offsetFileTwo[R], SEEK_SET);
 
-    for (int i = 0; i < K; i++) {
+    for (int i = 0; i < J; i++) {
         int num;
         fscanf(fptr, "%d", &num);
-        matrixTwo[R * K + i] = num;
+        matrixTwo[R * J + i] = num;
     }
     visitedColumnTwo[R] = 1;
+
+    fclose(fptr);
 }
 
 /*
@@ -277,26 +285,31 @@ void readRowsFromFileTwo(int R) {
 |_|   \__,_|_| |_|\___|\__|_|\___/|_| |_|
 */
 
-/*
-    Common thread runner function which implements the Skipgram approach for
-    reading rows from the files.
-    Assume that file 2 has 4 rows: [0, 1, 2, 3] and file 1 has 7 rows: [0, 1, 2, 3, 4, 5, 6]
-    We first read from file 2: 0-3 and then from file 1: 0-6
-    Therefore, the tasks can be represented as:
-    Task: [0, 1, 2, 3, 0, 1, 2, 3, 4, 5, 6]
-    ID:   [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-    The first J tasks are row numbers of file 2, the next I tasks are file 1 row numbers.
-    If thread id is t, then the thread performs task ID(s) [t, t+MAXTHREADS, t+2*MAXTHREADS ....]
-*/
 void* runner(void* arg) {
     int id = (uintptr_t) arg;
-    while (id < I + J) {
-        if (id < J) {
-            readRowsFromFileTwo(id);
+    while (currentRowOne < I || currentRowTwo < K) {
+        pthread_mutex_lock(&lock);
+        parity = !parity;
+        if (parity) {
+            if (currentRowOne < I) {
+                readRowsFromFileOne(currentRowOne++);
+            } else if (currentRowTwo < K) {
+                readRowsFromFileTwo(currentRowTwo++);
+            } else {
+                pthread_mutex_unlock(&lock);
+                pthread_exit(NULL);
+            }
         } else {
-            readRowsFromFileOne(id - J);
+            if (currentRowTwo < K) {
+                readRowsFromFileTwo(currentRowTwo++);
+            } else if (currentRowOne < I) {
+                readRowsFromFileOne(currentRowOne++);
+            } else {
+                pthread_mutex_unlock(&lock);
+                pthread_exit(NULL);
+            }
         }
-        id += MAXTHREADS;
+        pthread_mutex_unlock(&lock);
     }
     pthread_exit(NULL);
 }
@@ -334,7 +347,6 @@ int main(int argc, char* argv[]) {
     }
 
     I = atoi(argv[1]);
-    // TODO: Account for swapping J and K because of transpose.py
     J = atoi(argv[2]);
     K = atoi(argv[3]);
     inputFileOne = argv[4];
@@ -346,7 +358,7 @@ int main(int argc, char* argv[]) {
 
     threadID = (pthread_t*) malloc(MAXTHREADS * sizeof(pthread_t));
     offsetFileOne = (int*) malloc(I * sizeof(int));
-    offsetFileTwo = (int*) malloc(J * sizeof(int));
+    offsetFileTwo = (int*) malloc(K * sizeof(int));
 
     createSharedMemory();
     shmp->I = I;
@@ -356,6 +368,11 @@ int main(int argc, char* argv[]) {
 
     preProcessFileOne();
     preProcessFileTwo();
+
+    if (pthread_mutex_init(&lock, NULL) != 0) {
+        printf("\n mutex init has failed\n");
+        exit(-1);
+    }
 
     long long startTime = getCurrentTime();
 
@@ -369,10 +386,15 @@ int main(int argc, char* argv[]) {
 
     long long diff = getCurrentTime() - startTime;
 
-    printf("%d,%lld\n", MAXTHREADS, diff);
+    FILE* fpt = fopen("p1.csv", "a");
+    fprintf(fpt, "%d,%lld\n", MAXTHREADS, diff);
+    fclose(fpt);
 
     free(threadID);
     free(offsetFileOne);
     free(offsetFileTwo);
+
+    pthread_mutex_destroy(&lock);
+
     detachSharedMemory();
 }
