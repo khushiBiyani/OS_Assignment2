@@ -35,8 +35,6 @@ int currentRowOne = 0;    // Tracking to be read present row from in1.txt
 int currentRowTwo = 0;    // Tracking to be read present row from in2.txt
 bool parity = false;      // Tracking Parity to ensure RCRCRCCCC or RCRCRRRR execution to balance load
 
-pthread_t* threadID;    // stores ThreadIDs of MAXTHREADS threads
-
 /*
   _____ _                        _   __  __
  / ____| |                      | | |  \/  |
@@ -356,7 +354,7 @@ int main(int argc, char* argv[]) {
         MAXTHREADS = atoi(argv[7]);
     }
 
-    threadID = (pthread_t*) malloc(MAXTHREADS * sizeof(pthread_t));
+    pthread_t* threadID = (pthread_t*) malloc(MAXTHREADS * sizeof(pthread_t));
     offsetFileOne = (int*) malloc(I * sizeof(int));
     offsetFileTwo = (int*) malloc(K * sizeof(int));
 
@@ -386,15 +384,16 @@ int main(int argc, char* argv[]) {
 
     long long diff = getCurrentTime() - startTime;
 
-    FILE* fpt = fopen("p1.csv", "a");
-    fprintf(fpt, "%d,%lld\n", MAXTHREADS, diff);
-    fclose(fpt);
+    // Uncomment this block if you want to generate benchmark csv for p1.c
+    // FILE* fpt = fopen("p1.csv", "a");
+    // fprintf(fpt, "%d,%lld\n", MAXTHREADS, diff);
+    // fclose(fpt);
+
+    pthread_mutex_destroy(&lock);
 
     free(threadID);
     free(offsetFileOne);
     free(offsetFileTwo);
-
-    pthread_mutex_destroy(&lock);
 
     detachSharedMemory();
 }

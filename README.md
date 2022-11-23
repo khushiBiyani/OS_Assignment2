@@ -4,7 +4,7 @@ Operating Systems (CS F372) Assignment (Post Midsem) @ BITS Pilani, Hyderabad Ca
 
 # Program Workflow
 
-1. Run `scripts/gen.py` to generate your matrices into `in1.txt` and `in2.txt` with their product being in `out.txt` Alternatively, you can manually type out your matrices into `in1.txt` and `in2.txt`
+1. Run `scripts/gen.py` to generate your matrices into `in1.txt` and `in2.txt` with their product being in `genOut.txt` Alternatively, you can manually type out your matrices into `in1.txt` and `in2.txt`
 
 2. Run `scripts/transpose.py` to transpose the input in `in2.txt` to enable pre-processing.
 
@@ -26,11 +26,15 @@ To run program $1$, use the command: `./p1 i j k in1.txt in2.txt out.txt [MAXTHR
 
 `MAXTHREADS` is an **optional argument** which defaults to $1$ and indicates the number of threads **spawned** by `p1`.
 
+`p1.c` is responsible for using threading to read the files `in1.txt` and `in2.txt` into the shared memory segment.
+
 ### p2.c
 
 To compile program $2$, use the command: `gcc p2.c -o p2`
 
-To run program $2$, use the command: `./p2`
+To run program $2$, use the command: `./p2 [MAXTHREADS]`
+
+`MAXTHREADS` is an **optional argument** which defaults to $1$ and indicates the number of threads **spawned** by `p2`.
 
 Currently, `p2` reads the $2$ matrices from the shared memory segment.
 
@@ -67,6 +71,8 @@ Here $i$, $j$ and $k$ denote the dimensions of the matrices in `in1.txt` and `in
 To run program $runnerP1.py$, use the command: `python scripts/runnerP1.py`
 
 Automates the benchmarking of `p1.c` against given input files `in1.txt` and `in2.txt`, going over all thread values $t$ such that $1 \le t \le i+k$.
+
+**IMPORTANT:** To generate the CSV file for `p1.c`, you must uncomment the code block at the end of the file which is responsible for writing into the `.csv` file.
 
 ### plot.py
 
