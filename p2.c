@@ -1,9 +1,13 @@
 #include <pthread.h>
+#include <stdbool.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/shm.h>
+#include <time.h>
 #include <unistd.h>
+#include<math.h>
 
 /*
   _____ _       _           _  __      __        _       _     _
@@ -18,6 +22,9 @@ int I;    // Row size of matrix in in1.txt
 int J;    // Col size of matrix in in1.txt == Col size of matrix in in2.txt
 int K;    // Row size of matrix in in2.txt
 char outputFile[100];
+int MAXTHREADS = 20;
+int *outputMatrix;
+
 
 /*
   _____ _                        _   __  __
@@ -174,6 +181,95 @@ void destroySharedMemory() {
 }
 
 /*
+ _______ _                        _   _____
+|__   __| |                      | | |  __ \
+   | |  | |__  _ __ ___  __ _  __| | | |__) |   _ _ __  _ __   ___ _ __
+   | |  | '_ \| '__/ _ \/ _` |/ _` | |  _  / | | | '_ \| '_ \ / _ \ '__|
+   | |  | | | | | |  __/ (_| | (_| | | | \ \ |_| | | | | | | |  __/ |
+   |_|  |_| |_|_|  \___|\__,_|\__,_| |_|  \_\__,_|_| |_|_| |_|\___|_|
+
+ ______                _   _
+|  ____|              | | (_)
+| |__ _   _ _ __   ___| |_ _  ___  _ __
+|  __| | | | '_ \ / __| __| |/ _ \| '_ \
+| |  | |_| | | | | (__| |_| | (_) | | | |
+|_|   \__,_|_| |_|\___|\__|_|\___/|_| |_|
+*/
+
+// multiply row and column
+int compute(int row, int col) {
+    int product = 0;
+    int offsetRowOne = row * J;
+    int offsetRowTwo = col * J;
+    for(int i = 0; i < J; i++) {
+        product += matrixOne[offsetRowOne+i] * matrixTwo[offsetRowTwo + i];
+    }
+    
+    return product;
+}
+
+
+void* threadRunner(void* arg){
+
+    int threadNumber = (uintptr_t) arg;
+    int numOfElements=((I*K)+MAXTHREADS-1)/MAXTHREADS;
+    int *elementsOfThread = (int *) malloc(numOfElements * sizeof(int));
+
+    //initialising with -1
+    for(int i=0;i<numOfElements;i++){
+        elementsOfThread[i]=-1;
+    }
+    
+    //finding each thread's elements and storing them in array
+    for(int x=0;x<numOfElements;x++)
+    {
+        int alloted = threadNumber+MAXTHREADS*x;
+        if(alloted >= I * K) {
+            break;
+        }
+        elementsOfThread[x]=alloted;
+    }
+    
+    int currCalculatedElements=0;
+    // TODO : Loop Through, while loop, multiple threads
+    for(int i = 0; i < numOfElements && currCalculatedElements<numOfElements; i++) {
+        int cellNum = elementsOfThread[i];
+        if(cellNum == -1) continue;
+        int row = cellNum/K;
+        int col = cellNum%K;
+        // while(!visitedRowOne[row] || !visitedRowTwo[col]) {
+        //     // waits, MAKE IT BETTER
+        // }
+        if(visitedRowOne[row] && visitedRowTwo[col]){
+            outputMatrix[cellNum] = compute(row,col);
+            currCalculatedElements+=1;
+        }
+        else if(i==numOfElements-1 && currCalculatedElements!=numOfElements)
+            i = -1;
+    }
+
+    free(elementsOfThread);
+    pthread_exit(NULL);
+}
+
+/*
+  _______ _                                                      _
+ |__   __(_)                                                    (_)
+    | |   _ _ __ ___   ___   _ __ ___   ___  __ _ ___ _   _ _ __ _ _ __   __ _
+    | |  | | '_ ` _ \ / _ \ | '_ ` _ \ / _ \/ _` / __| | | | '__| | '_ \ / _` |
+    | |  | | | | | | |  __/ | | | | | |  __/ (_| \__ \ |_| | |  | | | | | (_| |
+    |_|  |_|_| |_| |_|\___| |_| |_| |_|\___|\__,_|___/\__,_|_|  |_|_| |_|\__, |
+                                                                          __/ |
+                                                                         |___/
+*/
+
+static long long getCurrentTime(void) {
+    struct timespec ts;
+    timespec_get(&ts, TIME_UTC);
+    return (long long) ts.tv_sec * 1000000000ll + ts.tv_nsec;
+}
+
+/*
  __  __       _         ______                _   _
 |  \/  |     (_)       |  ____|              | | (_)
 | \  / | __ _ _ _ __   | |__ _   _ _ __   ___| |_ _  ___  _ __
@@ -183,10 +279,18 @@ void destroySharedMemory() {
 */
 
 int main() {
+
     connectSharedMemory();
     I = shmp->I;
     J = shmp->J;
     K = shmp->K;
+    
+    outputMatrix=(int *)malloc((I*K)*sizeof(int));
+
+    // threads array
+    pthread_t *threadID;
+    threadID = (pthread_t*) malloc(MAXTHREADS * sizeof(pthread_t));
+
     strcpy(outputFile, shmp->outputFile);
 
     printf("Matrix one size: %d X %d\n", I, J);
@@ -204,6 +308,31 @@ int main() {
         }
         printf("\n");
     }
+
+    long long startTime = getCurrentTime();
+
+    for (int i = 0; i < MAXTHREADS; ++i) {
+        pthread_create(&threadID[i], NULL, threadRunner, (void*) (uintptr_t) i); 
+    }
+
+    for (int i = 0; i < MAXTHREADS; ++i) {
+        pthread_join(threadID[i], NULL);
+    }
+
+    printf("Output matrix:\n");
+
+    for(int i=0;i<I;++i) {
+        for(int j = 0; j < K; ++j) {
+            printf("%d ", outputMatrix[i * K + j]);
+        }
+        printf("\n");
+    }
+
+    long long diff = getCurrentTime() - startTime;
+
+    FILE* fpt = fopen("p2.csv", "a");
+    fprintf(fpt, "%d,%lld\n", MAXTHREADS, diff);
+    fclose(fpt);
 
     destroySharedMemory();
 }
