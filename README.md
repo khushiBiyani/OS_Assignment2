@@ -2,6 +2,14 @@
 
 Operating Systems (CS F372) Assignment (Post Midsem) @ BITS Pilani, Hyderabad Campus
 
+# Program Workflow
+
+1. Run `scripts/gen.py` to generate your matrices into `in1.txt` and `in2.txt` with their product being in `out.txt` Alternatively, you can manually type out your matrices into `in1.txt` and `in2.txt`
+
+2. Run `scripts/transpose.py` to transpose the input in `in2.txt` to enable pre-processing.
+
+3. Compile and run `scheduler.c` which will schedule `p1.c` and `p2.c` and compute the matrix product into `out.txt`.
+
 # C Programs
 
 ### p1.c
@@ -44,19 +52,21 @@ A generator for the following tasks:
 
 To run program $transpose.py$, use the command: `python scripts/transpose.py`
 
+Reads the matrix in `in2.txt`, computes its transpose and stores it back into `in2.txt`.
+
 ### singleRun.py
 
 To run program $singleRun.py$, use the command: `python scripts/singleRun.py i j k`
 
 Here $i$, $j$ and $k$ denote the dimensions of the matrices in `in1.txt` and `in2.txt`.
 
-`singleRun.py` automates running just `p1` and `p2` against the inputs `i, j, k`.
+`singleRun.py` automates running `p1` and `p2` against the inputs `i, j, k`.
 
 ### runnerP1.py
 
 To run program $runnerP1.py$, use the command: `python scripts/runnerP1.py`
 
-Automates the running of `p1.c` against given input files `in1.txt` and `in2.txt`, going over all thread values $t$ such that $1 \le t \le i+j$.
+Automates the benchmarking of `p1.c` against given input files `in1.txt` and `in2.txt`, going over all thread values $t$ such that $1 \le t \le i+k$.
 
 ### plot.py
 

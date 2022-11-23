@@ -1,4 +1,4 @@
-import subprocess
+from os import system
 
 # Calculating number of rows in both files for max value of threads to create
 with open("in1.txt", "r") as file:
@@ -18,21 +18,15 @@ row1 = row1 + 1
 col1 -= 1
 col2 = col2 + 1
 
-subprocess.call(["gcc", "-pthread", "p1.c", "-o", "p1"])
+system("gcc -pthread p1.c -o p1")
+system("gcc -pthread p2.c -o p2")
+
 curr_thread_cnt = 1
 while curr_thread_cnt <= row1 + col2:
-    tmp = subprocess.call(
-        [
-            "./p1",
-            str(row1),
-            str(col1),
-            str(col2),
-            "in1.txt",
-            "in2.txt",
-            "out.txt",
-            str(curr_thread_cnt),
-        ]
-    )
-    curr_thread_cnt = curr_thread_cnt + 1
+    system(f"./p1 {row1} {col1} {col2} in1.txt in2.txt out.txt {curr_thread_cnt}")
+    system(f"./p2 > /dev/null")
+    curr_thread_cnt += 1
+
+system("rm ./p1 ./p2")
 
 # End of Thread Count Iteration

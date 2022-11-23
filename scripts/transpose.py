@@ -1,16 +1,11 @@
-import numpy as np
+with open("in2.txt", "r") as file:
+    data = file.read().strip().split("\n")
 
-# Reading the matrix from file 2
-input_matrix = np.loadtxt("in2.txt", dtype="i")
+data = [x.split() for x in data]
+data = [[int(col) for col in row] for row in data]
+data = [list(i) for i in zip(*data)]
 
-# Tranposing the matrix
-transpose_matrix = input_matrix.transpose()
-
-# Saving the array in a text file
-file = open("in2.txt", "w")
-for row in transpose_matrix:
-    for element in row:
-        file.write(str(element))
-        file.write(" ")
-    file.write("\n")
-file.close()
+with open("in2.txt", "w") as file:
+    for row in data:
+        file.write(" ".join([str(x) for x in row]))
+        file.write("\n")
