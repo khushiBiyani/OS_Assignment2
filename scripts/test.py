@@ -1,10 +1,10 @@
 from os import system
 from random import randint
 
-for T in range(100):
-    i = randint(1, 100)
-    j = randint(1, 100)
-    k = randint(1, 100)
+for T in range(10):
+    i = randint(1, 1000)
+    j = randint(1, 1000)
+    k = randint(1, 1000)
     threadCount = randint(1, 100)
 
     system(f"python scripts/singleRun.py {i} {j} {k} {threadCount} ")
