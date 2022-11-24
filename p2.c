@@ -5,6 +5,8 @@
 #include <string.h>
 #include <sys/shm.h>
 
+typedef long long ll;
+
 /*
   _____ _       _           _  __      __        _       _     _
  / ____| |     | |         | | \ \    / /       (_)     | |   | |
@@ -14,12 +16,12 @@
  \_____|_|\___/|_.__/ \__,_|_|     \/ \__,_|_|  |_|\__,_|_.__/|_|\___||___/
 */
 
-int I;    // Row size of matrix in in1.txt
-int J;    // Col size of matrix in in1.txt == Col size of matrix in in2.txt
-int K;    // Row size of matrix in in2.txt
+ll I;    // Row size of matrix in in1.txt
+ll J;    // Col size of matrix in in1.txt == Col size of matrix in in2.txt
+ll K;    // Row size of matrix in in2.txt
 char outputFile[100];
-int MAXTHREADS = 1;
-int* outputMatrix;
+ll MAXTHREADS = 1;
+ll* outputMatrix;
 
 /*
   _____ _                        _   __  __
@@ -33,16 +35,16 @@ int* outputMatrix;
 */
 
 struct shmseg {
-    int I;    // Row size of matrixOne
-    int J;    // Col size of matrixOne == Col size of matrixTwo
-    int K;    // Row size of matrixTwo
+    ll I;    // Row size of matrixOne
+    ll J;    // Col size of matrixOne == Col size of matrixTwo
+    ll K;    // Row size of matrixTwo
     char outputFile[100];
 };
 struct shmseg* shmp;
-int* visitedRowOne;    // marks rows of matrixOne as read from in1.txt
-int* visitedRowTwo;    // marks rows of matrixTwo as read from in2.txt
-int* matrixOne;        // stores matrix read from in1.txt
-int* matrixTwo;        // stores matrix read from in2.txt
+ll* visitedRowOne;    // marks rows of matrixOne as read from in1.txt
+ll* visitedRowTwo;    // marks rows of matrixTwo as read from in2.txt
+ll* matrixOne;        // stores matrix read from in1.txt
+ll* matrixTwo;        // stores matrix read from in2.txt
 
 void connectSharedMemory() {
     int SHM_KEY, shmid;
@@ -62,12 +64,12 @@ void connectSharedMemory() {
 
     // Second shared memory segment - stores visitedRowOne
     SHM_KEY = ftok("./p1.c", 0x2);
-    shmid = shmget(SHM_KEY, shmp->I * sizeof(int), 0644);
+    shmid = shmget(SHM_KEY, shmp->I * sizeof(ll), 0644);
     if (shmid == -1) {
         perror("Shared memory");
         exit(-1);
     }
-    visitedRowOne = (int*) shmat(shmid, NULL, 0);
+    visitedRowOne = (ll*) shmat(shmid, NULL, 0);
     if (visitedRowOne == (void*) -1) {
         perror("Shared memory attach");
         exit(-1);
@@ -75,12 +77,12 @@ void connectSharedMemory() {
 
     // Third shared memory segment - stores visitedRowTwo
     SHM_KEY = ftok("./p1.c", 0x3);
-    shmid = shmget(SHM_KEY, shmp->K * sizeof(int), 0644);
+    shmid = shmget(SHM_KEY, shmp->K * sizeof(ll), 0644);
     if (shmid == -1) {
         perror("Shared memory");
         exit(-1);
     }
-    visitedRowTwo = (int*) shmat(shmid, NULL, 0);
+    visitedRowTwo = (ll*) shmat(shmid, NULL, 0);
     if (visitedRowTwo == (void*) -1) {
         perror("Shared memory attach");
         exit(-1);
@@ -88,12 +90,12 @@ void connectSharedMemory() {
 
     // Fourth shared memory segment - stores matrixOne
     SHM_KEY = ftok("./p1.c", 0x4);
-    shmid = shmget(SHM_KEY, shmp->I * shmp->J * sizeof(int), 0644);
+    shmid = shmget(SHM_KEY, shmp->I * shmp->J * sizeof(ll), 0644);
     if (shmid == -1) {
         perror("Shared memory");
         exit(-1);
     }
-    matrixOne = (int*) shmat(shmid, NULL, 0);
+    matrixOne = (ll*) shmat(shmid, NULL, 0);
     if (matrixOne == (void*) -1) {
         perror("Shared memory attach");
         exit(-1);
@@ -101,12 +103,12 @@ void connectSharedMemory() {
 
     //  Fifth shared memory segment - stores matrixTwo
     SHM_KEY = ftok("./p1.c", 0x5);
-    shmid = shmget(SHM_KEY, shmp->K * shmp->J * sizeof(int), 0644);
+    shmid = shmget(SHM_KEY, shmp->K * shmp->J * sizeof(ll), 0644);
     if (shmid == -1) {
         perror("Shared memory");
         exit(-1);
     }
-    matrixTwo = (int*) shmat(shmid, NULL, 0);
+    matrixTwo = (ll*) shmat(shmid, NULL, 0);
     if (matrixTwo == (void*) -1) {
         perror("Shared memory attach");
         exit(-1);
@@ -128,7 +130,7 @@ void destroySharedMemory() {
 
     // Destroys second shared memory segment
     SHM_KEY = ftok("./p1.c", 0x2);
-    shmid = shmget(SHM_KEY, I * sizeof(int), 0644);
+    shmid = shmget(SHM_KEY, I * sizeof(ll), 0644);
     if (shmdt(visitedRowOne) == -1) {
         perror("shmdt");
         exit(-1);
@@ -140,7 +142,7 @@ void destroySharedMemory() {
 
     // Destroys third shared memory segment
     SHM_KEY = ftok("./p1.c", 0x3);
-    shmid = shmget(SHM_KEY, K * sizeof(int), 0644);
+    shmid = shmget(SHM_KEY, K * sizeof(ll), 0644);
     if (shmdt(visitedRowTwo) == -1) {
         perror("shmdt");
         exit(-1);
@@ -152,7 +154,7 @@ void destroySharedMemory() {
 
     // Destroys fourth shared memory segment
     SHM_KEY = ftok("./p1.c", 0x4);
-    shmid = shmget(SHM_KEY, I * J * sizeof(int), 0644);
+    shmid = shmget(SHM_KEY, I * J * sizeof(ll), 0644);
     if (shmdt(matrixOne) == -1) {
         perror("shmdt");
         exit(-1);
@@ -164,7 +166,7 @@ void destroySharedMemory() {
 
     // Destroys fifth shared memory segment
     SHM_KEY = ftok("./p1.c", 0x5);
-    shmid = shmget(SHM_KEY, K * J * sizeof(int), 0644);
+    shmid = shmget(SHM_KEY, K * J * sizeof(ll), 0644);
     if (shmdt(matrixTwo) == -1) {
         perror("shmdt");
         exit(-1);
@@ -192,13 +194,13 @@ void destroySharedMemory() {
 */
 
 // multiply row and column
-int compute(int row, int col) {
-    int product = 0;
+ll compute(ll row, ll col) {
+    ll product = 0;
 
-    int offsetRowOne = row * J;
-    int offsetRowTwo = col * J;
+    ll offsetRowOne = row * J;
+    ll offsetRowTwo = col * J;
 
-    for (int i = 0; i < J; i++) {
+    for (ll i = 0; i < J; i++) {
         product += matrixOne[offsetRowOne + i] * matrixTwo[offsetRowTwo + i];
     }
 
@@ -206,30 +208,30 @@ int compute(int row, int col) {
 }
 
 void* runner(void* arg) {
-    int threadNumber = (uintptr_t) arg;
-    int numOfElements = ((I * K) + MAXTHREADS - 1) / MAXTHREADS;
-    int* elementsOfThread = (int*) malloc(numOfElements * sizeof(int));
+    ll threadNumber = (uintptr_t) arg;
+    ll numOfElements = ((I * K) + MAXTHREADS - 1) / MAXTHREADS;
+    ll* elementsOfThread = (ll*) malloc(numOfElements * sizeof(ll));
 
     // initialising with -1
-    for (int i = 0; i < numOfElements; i++) {
+    for (ll i = 0; i < numOfElements; i++) {
         elementsOfThread[i] = -1;
     }
 
     // finding each thread's elements and storing them in array
-    for (int x = 0; x < numOfElements; x++) {
-        int alloted = threadNumber + MAXTHREADS * x;
+    for (ll x = 0; x < numOfElements; x++) {
+        ll alloted = threadNumber + MAXTHREADS * x;
         if (alloted >= I * K) {
             break;
         }
         elementsOfThread[x] = alloted;
     }
 
-    int currCalculatedElements = 0;
-    for (int i = 0; i < numOfElements && currCalculatedElements < numOfElements; i++) {
-        int cellNum = elementsOfThread[i];
+    ll currCalculatedElements = 0;
+    for (ll i = 0; i < numOfElements && currCalculatedElements < numOfElements; i++) {
+        ll cellNum = elementsOfThread[i];
         if (cellNum == -1) break;
-        int row = cellNum / K;
-        int col = cellNum % K;
+        ll row = cellNum / K;
+        ll col = cellNum % K;
         if (visitedRowOne[row] && visitedRowTwo[col]) {
             outputMatrix[cellNum] = compute(row, col);
             ++currCalculatedElements;
@@ -282,60 +284,60 @@ int main(int argc, char* argv[]) {
     K = shmp->K;
     strcpy(outputFile, shmp->outputFile);
 
-    outputMatrix = (int*) malloc((I * K) * sizeof(int));
+    outputMatrix = (ll*) malloc((I * K) * sizeof(ll));
 
     pthread_t* threadID;
     threadID = (pthread_t*) malloc(MAXTHREADS * sizeof(pthread_t));
 
-    long long startTime = getCurrentTime();
+    ll startTime = getCurrentTime();
 
-    for (int i = 0; i < MAXTHREADS; ++i) {
+    for (ll i = 0; i < MAXTHREADS; ++i) {
         pthread_create(&threadID[i], NULL, runner, (void*) (uintptr_t) i);
     }
 
-    for (int i = 0; i < MAXTHREADS; ++i) {
+    for (ll i = 0; i < MAXTHREADS; ++i) {
         pthread_join(threadID[i], NULL);
     }
 
-    long long diff = getCurrentTime() - startTime;
+    ll diff = getCurrentTime() - startTime;
 
-    // printf("Matrix one size: %d X %d\n", I, J);
-    // for (int i = 0; i < I; ++i) {
-    //     for (int j = 0; j < J; ++j) {
-    //         printf("%d ", matrixOne[i * J + j]);
+    // printf("Matrix one size: %lld X %lld\n", I, J);
+    // for (ll i = 0; i < I; ++i) {
+    //     for (ll j = 0; j < J; ++j) {
+    //         printf("%lld ", matrixOne[i * J + j]);
     //     }
     //     printf("\n");
     // }
 
-    // printf("Matrix two size: %d X %d\n", K, J);
-    // for (int i = 0; i < K; ++i) {
-    //     for (int j = 0; j < J; ++j) {
-    //         printf("%d ", matrixTwo[i * J + j]);
+    // printf("Matrix two size: %lld X %lld\n", K, J);
+    // for (ll i = 0; i < K; ++i) {
+    //     for (ll j = 0; j < J; ++j) {
+    //         printf("%lld ", matrixTwo[i * J + j]);
     //     }
     //     printf("\n");
     // }
 
     // printf("Output matrix:\n");
 
-    // for (int i = 0; i < I; ++i) {
-    //     for (int j = 0; j < K; ++j) {
-    //         printf("%d ", outputMatrix[i * K + j]);
+    // for (ll i = 0; i < I; ++i) {
+    //     for (ll j = 0; j < K; ++j) {
+    //         printf("%lld ", outputMatrix[i * K + j]);
     //     }
     //     printf("\n");
     // }
 
     FILE* fpt = fopen("out.txt", "w");
-    for (int i = 0; i < I; ++i) {
-        for (int j = 0; j < K; ++j) {
-            fprintf(fpt, "%d ", outputMatrix[i * K + j]);
+    for (ll i = 0; i < I; ++i) {
+        for (ll j = 0; j < K; ++j) {
+            fprintf(fpt, "%lld ", outputMatrix[i * K + j]);
         }
         fprintf(fpt, "\n");
     }
     fclose(fpt);
 
     // Uncomment this block if you want to generate benchmark csv for p2.c
-    // FILE* fpt = fopen("p2.csv", "a");
-    // fprintf(fpt, "%d,%lld\n", MAXTHREADS, diff);
+    // fpt = fopen("p2.csv", "a");
+    // fprintf(fpt, "%lld,%lld\n", MAXTHREADS, diff);
     // fclose(fpt);
 
     free(outputMatrix);

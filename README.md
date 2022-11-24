@@ -26,7 +26,7 @@ To run program $1$, use the command: `./p1 i j k in1.txt in2.txt out.txt [MAXTHR
 
 `MAXTHREADS` is an **optional argument** which defaults to $1$ and indicates the number of threads **spawned** by `p1`.
 
-`p1.c` is responsible for using threading to read the files `in1.txt` and `in2.txt` into the shared memory segment.
+> `p1.c` is responsible for using threading to read the files `in1.txt` and `in2.txt` into the shared memory segment.
 
 ### p2.c
 
@@ -36,7 +36,7 @@ To run program $2$, use the command: `./p2 [MAXTHREADS]`
 
 `MAXTHREADS` is an **optional argument** which defaults to $1$ and indicates the number of threads **spawned** by `p2`.
 
-Currently, `p2` reads the $2$ matrices from the shared memory segment.
+> `p2` reads the $2$ matrices from the shared memory segment and computes their product with multithreading. After that, it writes the product matrix into `out.txt`.
 
 # Python Scripts
 
@@ -44,41 +44,38 @@ Currently, `p2` reads the $2$ matrices from the shared memory segment.
 
 To run program $gen.py$, use the command: `python scripts/gen.py i j k`
 
-A generator for the following tasks:
-
-- A random matrix of size $(i \times j)$ into `in1.txt`
-
-- A random matrix of size $(j \times k)$ into `in2.txt`
-
-- Their matrix product into `genOut.txt`
+> A generator for the following tasks:
+>- A random matrix of size $(i \times j)$ into `in1.txt`
+>- A random matrix of size $(j \times k)$ into `in2.txt`
+>- Their matrix product into `genOut.txt`
 
 ### transpose.py
 
 To run program $transpose.py$, use the command: `python scripts/transpose.py`
 
-Reads the matrix in `in2.txt`, computes its transpose and stores it back into `in2.txt`.
+> Reads the matrix in `in2.txt`, computes its transpose and stores it back into `in2.txt`.
 
 ### singleRun.py
 
 To run program $singleRun.py$, use the command: `python scripts/singleRun.py i j k`
 
-Here $i$, $j$ and $k$ denote the dimensions of the matrices in `in1.txt` and `in2.txt`.
+$i$, $j$ and $k$ denote the dimensions of the matrices in `in1.txt` and `in2.txt`.
 
-`singleRun.py` automates running `p1` and `p2` against the inputs `i, j, k`.
+> `singleRun.py` automates running `p1` and `p2` against the inputs `i, j, k`.
 
-### runnerP1.py
+### runner.py
 
-To run program $runnerP1.py$, use the command: `python scripts/runnerP1.py`
+> **IMPORTANT:** To generate the CSV file for `p1.c` and `p2.c`, you must uncomment the code block at the end of the file which is responsible for writing into the `.csv` file.
 
-Automates the benchmarking of `p1.c` against given input files `in1.txt` and `in2.txt`, going over all thread values $t$ such that $1 \le t \le i+k$.
+To run program $runner.py$, use the command: `python scripts/runner.py`
 
-**IMPORTANT:** To generate the CSV file for `p1.c`, you must uncomment the code block at the end of the file which is responsible for writing into the `.csv` file.
+> Automates the benchmarking of `p1.c` and `p2.c` against given input files `in1.txt` and `in2.txt`, going over all thread values $t$ such that $1 \le t \le i+k$.
 
 ### plot.py
 
 To run program $plot.py$, use the command: `python scripts/plot.py <csvfile-name>.csv`
 
-Generates a scatter plot for the input CSV file.
+> Generates a scatter plot for the input CSV file and applies regression to find the best fit curve against the data.
 
 # Authors
 
