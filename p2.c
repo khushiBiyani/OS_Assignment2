@@ -195,7 +195,6 @@ void destroySharedMemory() {
 
 // multiply row and column
 ll compute(ll row, ll col) {
-    // printf("Entering compute: %lld, %lld\t", row, col);
     ll product = 0;
 
     ll offsetRowOne = row * J;
@@ -205,14 +204,12 @@ ll compute(ll row, ll col) {
         product += matrixOne[offsetRowOne + i] * matrixTwo[offsetRowTwo + i];
     }
 
-    // printf("Exiting compute: %lld, %lld\tCalculated Value: %lld\n\n", row, col, product);
     return product;
 }
 
 void* runner(void* arg) {
     ll threadNumber = (uintptr_t) arg;
-    if(threadNumber >= I*K)
-        pthread_exit(NULL);
+    if (threadNumber >= I * K) pthread_exit(NULL);
     ll numOfElements = ((I * K) + MAXTHREADS - 1) / MAXTHREADS;
     ll* elementsOfThread = (ll*) malloc(numOfElements * sizeof(ll));
 
@@ -234,9 +231,8 @@ void* runner(void* arg) {
     }
 
     ll currCalculatedElements = 0;
-    ll i = 0;
-    while(currCalculatedElements < myElementCount) {
-        for (i = 0; i < numOfElements; i++) {
+    while (currCalculatedElements < myElementCount) {
+        for (ll i = 0; i < numOfElements; i++) {
             ll cellNum = elementsOfThread[i];
             if (cellNum == -1) continue;
             ll row = cellNum / K;
