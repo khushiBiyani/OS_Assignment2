@@ -10,7 +10,7 @@ def main():
     j = int(argv[2])
     k = int(argv[3])
 
-    lim = 1e6
+    lim = 1e2
 
     mat = np.random.randint(-lim, lim, size=(i, j))
     mat2 = np.random.randint(-lim, lim, size=(j, k))

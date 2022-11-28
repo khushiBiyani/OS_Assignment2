@@ -1,51 +1,78 @@
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
+#include <sys/wait.h>
 #include <signal.h>
 #include <sys/types.h>
 
-int main()
+int main(int argc, char* argv[])
 {
+    if (argc != 7 && argc != 8) {
+        printf("Usage: ./sched i j k in1.txt in2.txt out.txt [MAXTHREADS]\n");
+        exit(-1);
+    }
+    char* I = argv[1];
+    char* J = argv[2];
+    char* K = argv[3];
+    char* inputFileOne = argv[4];
+    char* inputFileTwo = argv[5];
+    char*  outputFile = argv[6];
+    char* MAXTHREADS = "1";
+    if (argc == 8) {
+        MAXTHREADS = argv[7];
+    }
+
     pid_t pro1_pid = -1, pro2_pid = -1, sch_pid = -1;
     sch_pid = getpid();
     pro1_pid = fork(); // returns 0 to child and child-pid to parent.
     if (pro1_pid == 0) // if child (pro1)
     {
-
-        execl("./pro1", NULL);
+        execlp("./p1", "./p1", I, J, K, inputFileOne, inputFileTwo, outputFile, MAXTHREADS, NULL);
     }
+    kill(pro1_pid,SIGSTOP); // we are NOT killing the processes.
 
-    // parent
     pro2_pid = fork();
     if (pro2_pid == 0) // if child (pro2)
     {
-        execl("./pro2", NULL);
+        execlp("./p2", "./p2", MAXTHREADS, NULL);
     }
-
-    printf("%d %d \n", pro1_pid, pro2_pid);
-
-    int quantum_number = 0;
-
-    //pause both processes
-    kill(pro1_pid,SIGSTOP); // we are NOT killing the processes.
     kill(pro2_pid,SIGSTOP);
-    
-    kill(pro1_pid,SIGCONT); 
+
+    int turn = 0;
+
+    int pro1alive = 141221;
+    int pro2alive = 141221;
+
     while (1)
     {
-        printf("QUANTUM NUMBER: %d\n",quantum_number);
-        if (quantum_number%2==0) //even implies pro1 should execute
-        {
-            kill(pro2_pid,SIGSTOP);   
+        waitpid(pro1_pid, &pro1alive, WNOHANG);
+        waitpid(pro2_pid, &pro2alive, WNOHANG);
+        if(pro1alive == 141221 && pro2alive == 141221) {
+            if (turn%2==0) //even implies pro1 should execute
+            {
+                kill(pro2_pid,SIGSTOP);   
+                kill(pro1_pid,SIGCONT);
+            }
+            else
+            {
+                kill(pro1_pid,SIGSTOP);   
+                kill(pro2_pid,SIGCONT);
+            }
+        }
+        else if(pro1alive == 141221 && pro2alive != 141221) { 
             kill(pro1_pid,SIGCONT);
         }
-        else
-        {
-            kill(pro1_pid,SIGSTOP);   
+        else if(pro1alive != 141221 && pro2alive == 141221) {
             kill(pro2_pid,SIGCONT);
         }
-        quantum_number++;
-        sleep(5);
+        else {
+            break;
+        }
+        turn++;
+        usleep(5000);
     }
+
     wait(NULL);
-    return 0;
+    wait(NULL);
 }
