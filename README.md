@@ -81,7 +81,7 @@ To run program $runner.py$, use the command: `python scripts/runner.py`
 
 ### plot.py
 
-To run program $plot.py$, use the command: `python scripts/plot.py <csvfile-name>.csv`
+To run program $plot.py$, use the command: `python scripts/plot.py <csvfile-name>.csv <PlotTitle>`
 
 > Generates a scatter plot for the input CSV file and applies regression to find the best fit curve against the data.
 
