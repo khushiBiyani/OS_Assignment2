@@ -2,21 +2,23 @@
 
 Operating Systems (CS F372) Assignment (Post Midsem) @ BITS Pilani, Hyderabad Campus
 
-# Program Workflow
+# Process Workflow
 
 1. Run `scripts/gen.py` to generate your matrices into `in1.txt` and `in2.txt` with their product being in `genOut.txt` Alternatively, you can manually type out your matrices into `in1.txt` and `in2.txt`
 
 2. Run `scripts/transpose.py` to transpose the input in `in2.txt` to enable pre-processing.
 
-3. Compile and run `scheduler.c` which will schedule `p1.c` and `p2.c` and compute the matrix product into `out.txt`.
+3. Compile `scheduler.c` into `./sched`, `p1.c` into `./p1` and `p2.c` into `./p2`.
+
+4. `./sched` will schedule `p1.c` and `p2.c` through a $Round \ Robin$ mechanism and compute the matrix product into `out.txt`.
 
 # C Programs
 
-### p1.c
+### scheduler.c
 
-To compile program $1$, use the command: `gcc -pthread p1.c -o p1`
+To compile $scheduler.c$, use the command: `gcc scheduler.c -o sched`
 
-To run program $1$, use the command: `./p1 i j k in1.txt in2.txt out.txt [MAXTHREADS]`
+To run $scheduler.c$, use the command: `./sched i j k in1.txt in2.txt out.txt [MAXTHREADS]`
 
 `in1.txt` contains a matrix of dimension $(i \times j)$
 
@@ -24,17 +26,21 @@ To run program $1$, use the command: `./p1 i j k in1.txt in2.txt out.txt [MAXTHR
 
 `out.txt` contains a matrix of dimension $(i \times k)$ and is the product of the above $2$ matrices.
 
-`MAXTHREADS` is an **optional argument** which defaults to $1$ and indicates the number of threads **spawned** by `p1`.
+`MAXTHREADS` is an **optional argument** which defaults to $1$ and indicates the number of threads **spawned** by both `p1` and `p2`.
 
-> `p1.c` is responsible for using threading to read the files `in1.txt` and `in2.txt` into the shared memory segment.
+### p1.c
+
+To compile $p1.c$, use the command: `gcc -pthread p1.c -o p1`
+
+To run $p1.c$, use the command: `./p1 i j k in1.txt in2.txt out.txt [MAXTHREADS]`
+
+> `p1.c` is responsible for using multi-threading to read the files `in1.txt` and `in2.txt` into a shared memory segment.
 
 ### p2.c
 
-To compile program $2$, use the command: `gcc p2.c -o p2`
+To compile $p2.c$, use the command: `gcc -pthread p2.c -o p2`
 
-To run program $2$, use the command: `./p2 [MAXTHREADS]`
-
-`MAXTHREADS` is an **optional argument** which defaults to $1$ and indicates the number of threads **spawned** by `p2`.
+To run $p2.c$, use the command: `./p2 [MAXTHREADS]`
 
 > `p2` reads the $2$ matrices from the shared memory segment and computes their product with multithreading. After that, it writes the product matrix into `out.txt`.
 
@@ -57,11 +63,11 @@ To run program $transpose.py$, use the command: `python scripts/transpose.py`
 
 ### singleRun.py
 
-To run program $singleRun.py$, use the command: `python scripts/singleRun.py i j k`
+To run program $singleRun.py$, use the command: `python scripts/singleRun.py i j k [MAXTHREADS]`
 
 $i$, $j$ and $k$ denote the dimensions of the matrices in `in1.txt` and `in2.txt`.
 
-> `singleRun.py` automates running `p1` and `p2` against the inputs `i, j, k`.
+> `singleRun.py` automates running `./sched` against the inputs `i, j, k, MAXTHREADS` and verifies the output of `out.txt` against `genOut.txt`.
 
 ### runner.py
 

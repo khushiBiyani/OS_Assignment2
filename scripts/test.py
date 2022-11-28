@@ -1,28 +1,15 @@
-from os import system
 from random import randint
+from os import system
 
-for T in range(10):
-    i = randint(1, 1000)
-    j = randint(1, 1000)
-    k = randint(1, 1000)
-    threadCount = randint(1, 100)
-
-    system(f"python scripts/singleRun.py {i} {j} {k} {threadCount} ")
-
-    with open("genOut.txt", "r") as file:
-        genData = file.read().strip().split("\n")
-
-    genData = [x.split() for x in genData]
-    genData = [[int(y) for y in x] for x in genData]
-
-    with open("out.txt", "r") as file:
-        data = file.read().strip().split("\n")
-
-    data = [x.split() for x in data]
-    data = [[int(y) for y in x] for x in data]
-
-    if data == genData:
-        print(f"Test Case #{T+1}: [OK]")
-    else:
-        print(f"Test Case #{T+1}: [WA]")
+for T in range(1, 11):
+    i = randint(1, 50001)
+    j = randint(1, 501)
+    k = randint(1, 501)
+    threadCount = randint(1, 51)
+    if (
+        system(
+            f"echo -n '#{T} ' && python scripts/singleRun.py {i} {j} {k} {threadCount}"
+        )
+        != 0
+    ):
         exit(-1)

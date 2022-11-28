@@ -16,8 +16,23 @@ system("python scripts/transpose.py")
 
 for n in range(1, 3):
     system(f"gcc -pthread p{n}.c -o p{n}")
+system("gcc scheduler.c -o sched")
 
-system(f"./p1 {i} {j} {k} in1.txt in2.txt out.txt {threadCount} && ./p2 {threadCount}")
+system(f"./sched {i} {j} {k} in1.txt in2.txt out.txt {threadCount}")
 
-for n in range(1, 3):
-    system(f"rm ./p{n}")
+with open("genOut.txt", "r") as file:
+    genData = file.read().strip().split("\n")
+genData = [x.split() for x in genData]
+genData = [[int(y) for y in x] for x in genData]
+
+with open("out.txt", "r") as file:
+    data = file.read().strip().split("\n")
+data = [x.split() for x in data]
+data = [[int(y) for y in x] for x in data]
+
+if data != genData:
+    print(f"Test Case (I: {i}, J: {j}, K: {k}, MAXTHREADS: {threadCount}) -> [WA]")
+    exit(-1)
+else:
+    print(f"Test Case (I: {i}, J: {j}, K: {k}, MAXTHREADS: {threadCount}) -> [AC]")
+    system("rm ./p1 ./p2 ./sched *.txt")

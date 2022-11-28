@@ -209,6 +209,7 @@ ll compute(ll row, ll col) {
 
 void* runner(void* arg) {
     ll threadNumber = (uintptr_t) arg;
+    if (threadNumber >= I * K) pthread_exit(NULL);
     ll numOfElements = ((I * K) + MAXTHREADS - 1) / MAXTHREADS;
     ll* elementsOfThread = (ll*) malloc(numOfElements * sizeof(ll));
 
@@ -217,6 +218,8 @@ void* runner(void* arg) {
         elementsOfThread[i] = -1;
     }
 
+    ll myElementCount = 0;
+
     // finding each thread's elements and storing them in array
     for (ll x = 0; x < numOfElements; x++) {
         ll alloted = threadNumber + MAXTHREADS * x;
@@ -224,19 +227,21 @@ void* runner(void* arg) {
             break;
         }
         elementsOfThread[x] = alloted;
+        ++myElementCount;
     }
 
     ll currCalculatedElements = 0;
-    for (ll i = 0; i < numOfElements && currCalculatedElements < numOfElements; i++) {
-        ll cellNum = elementsOfThread[i];
-        if (cellNum == -1) break;
-        ll row = cellNum / K;
-        ll col = cellNum % K;
-        if (visitedRowOne[row] && visitedRowTwo[col]) {
-            outputMatrix[cellNum] = compute(row, col);
-            ++currCalculatedElements;
-        } else if (i == numOfElements - 1 && currCalculatedElements < numOfElements) {
-            i = -1;
+    while (currCalculatedElements < myElementCount) {
+        for (ll i = 0; i < numOfElements; i++) {
+            ll cellNum = elementsOfThread[i];
+            if (cellNum == -1) continue;
+            ll row = cellNum / K;
+            ll col = cellNum % K;
+            if (visitedRowOne[row] && visitedRowTwo[col]) {
+                outputMatrix[cellNum] = compute(row, col);
+                elementsOfThread[i] = -1;
+                ++currCalculatedElements;
+            }
         }
     }
 
