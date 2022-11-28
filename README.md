@@ -67,9 +67,11 @@ $i$, $j$ and $k$ denote the dimensions of the matrices in `in1.txt` and `in2.txt
 
 > **IMPORTANT:** To generate the CSV file for `p1.c` and `p2.c`, you must uncomment the code block at the end of the file which is responsible for writing into the `.csv` file.
 
+Make sure you have run `python scripts/transpose.py`
+
 To run program $runner.py$, use the command: `python scripts/runner.py`
 
-> Automates the benchmarking of `p1.c` and `p2.c` against given input files `in1.txt` and `in2.txt`, going over all thread values $t$ such that $1 \le t \le i+k$.
+> Automates the benchmarking of `p1.c` and `p2.c` against given input files `in1.txt` and `in2.txt`, going over all thread values $t$ such that $1 \le t \le i \times k$.
 
 ### plot.py
 
