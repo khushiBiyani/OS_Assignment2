@@ -1,27 +1,38 @@
+import pandas as pd
 import matplotlib.pyplot as plt
-import csv
+from sklearn.linear_model import LinearRegression
+from sklearn.model_selection import train_test_split
 from sys import argv
 
 
 def make_plot():
-    assert len(argv) == 2, "Incorrect usage: python plot.py <csv-file-name>.csv"
-    filename = str(argv[1])
+    assert (
+        len(argv) == 3
+    ), "Incorrect usage: python plot.py <csv-file-name>.csv '<Plot Title>'"
+    fileName = argv[1]
+    plotTile = argv[2]
 
-    x = []  # number of threads, first column in csv
-    y = []  # time(in nanoseconds), second column in csv
-    data = []
+    df = pd.read_csv(fileName)
 
-    with open(filename, "r") as csvfile:
-        data = list(csv.reader(csvfile, delimiter=","))
-        for row in data[1:]:
-            x.append(int(row[0]))
-            y.append(float(row[1]))
+    X = df.iloc[:, :-1].values
+    Y = df.iloc[:, 1].values
 
-    # scatterplot
-    plt.scatter(x, y, color="g", marker="o")
-    plt.xlabel(data[0][0])
-    plt.ylabel(data[0][1])
-    plt.title("Matplotlib Plots", fontsize=21)
+    X_train, X_test, Y_train, _ = train_test_split(X, Y, test_size=0.3, random_state=0)
+
+    regressor = LinearRegression()
+    regressor.fit(X_train, Y_train)
+
+    Y_pred = regressor.predict(X_test)
+
+    plt.scatter(X_train, Y_train, color="g", marker="o")
+    plt.plot(X_test, Y_pred, color="red")
+
+    labels = list(df)
+    plt.xlabel(labels[0])
+    plt.ylabel(labels[1])
+
+    plt.title(plotTile, fontsize=21)
+
     plt.show()
 
 
