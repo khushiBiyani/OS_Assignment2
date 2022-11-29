@@ -1,37 +1,40 @@
-import pandas as pd
 import matplotlib.pyplot as plt
-from sklearn.linear_model import LinearRegression
-from sklearn.model_selection import train_test_split
+import csv
+import numpy
 from sys import argv
 
+# in line 26, change the degree(in code is = 17) of polynomial line as per your requirement
+# if the plot on exiting says "RankWarning: Polyfit may be poorly conditioned" that basically means use a smaller degree
 
 def make_plot():
-    assert (
-        len(argv) == 3
-    ), "Incorrect usage: python plot.py <csv-file-name>.csv '<Plot Title>'"
-    fileName = argv[1]
-    plotTile = argv[2]
+    assert len(argv) == 3, "Incorrect usage: python plot.py <csv-file-name>.csv '<Plot Title>'"
+    fileName = str(argv[1])
+    plotTitle = str(argv[2])
 
-    df = pd.read_csv(fileName)
+    x = []  
+    y = []  
+    data = []
 
-    X = df.iloc[:, :-1].values
-    Y = df.iloc[:, 1].values
+    with open(fileName, "r") as csvfile:
+        data = list(csv.reader(csvfile, delimiter=","))
+        for row in data[1:]:
+            x.append(int(row[0]))
+            y.append(float(row[1]))
 
-    X_train, X_test, Y_train, _ = train_test_split(X, Y, test_size=0.3, random_state=0)
+    end = max(x)
 
-    regressor = LinearRegression()
-    regressor.fit(X_train, Y_train)
+    polyModel = numpy.poly1d(numpy.polyfit(x, y, 17))
+    polyLine = numpy.linspace(1, end)
 
-    Y_pred = regressor.predict(X_test)
+    # scatterplot
+    plt.scatter(x, y, color="g", marker="o")
 
-    plt.scatter(X_train, Y_train, color="g", marker="o")
-    plt.plot(X_test, Y_pred, color="red")
+    # regression curve
+    plt.plot(polyLine, polyModel(polyLine))
 
-    labels = list(df)
-    plt.xlabel(labels[0])
-    plt.ylabel(labels[1])
-
-    plt.title(plotTile, fontsize=21)
+    plt.xlabel(data[0][0])
+    plt.ylabel(data[0][1])
+    plt.title(plotTitle, fontsize=21)
 
     plt.show()
 
