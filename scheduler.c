@@ -64,7 +64,7 @@ int main(int argc, char* argv[]) {
             break;
         }
         turn ^= 1;
-        usleep(5000);
+        usleep(2000);
     }
 
     wait(NULL);

@@ -85,6 +85,11 @@ void createSharedMemory() {
         perror("Shared memory attach");
         exit(-1);
     }
+    shmp->sharedMemoryInitialized = false;
+    shmp->I = I;
+    shmp->J = J;
+    shmp->K = K;
+    strcpy(shmp->outputFile, outputFile);
 
     // Second shared memory segment - stores visitedRowOne
     SHM_KEY = ftok("./p1.c", 0x2);
@@ -355,16 +360,12 @@ int main(int argc, char* argv[]) {
         MAXTHREADS = atoi(argv[7]);
     }
 
+    createSharedMemory();
+    shmp->sharedMemoryInitialized = true;
+
     pthread_t* threadID = (pthread_t*) malloc(MAXTHREADS * sizeof(pthread_t));
     offsetFileOne = (ll*) malloc(I * sizeof(ll));
     offsetFileTwo = (ll*) malloc(K * sizeof(ll));
-
-    createSharedMemory();
-    shmp->I = I;
-    shmp->J = J;
-    shmp->K = K;
-    strcpy(shmp->outputFile, outputFile);
-    shmp->sharedMemoryInitialized = true;
 
     preProcessFileOne();
     preProcessFileTwo();
