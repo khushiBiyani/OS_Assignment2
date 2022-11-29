@@ -3,16 +3,19 @@ import csv
 import numpy
 from sys import argv
 
-# in line 26, change the degree(in code is = 17) of polynomial line as per your requirement
+# in line 26, change the degree(in code is = 3) of polynomial line as per your requirement
 # if the plot on exiting says "RankWarning: Polyfit may be poorly conditioned" that basically means use a smaller degree
 
+
 def make_plot():
-    assert len(argv) == 3, "Incorrect usage: python plot.py <csv-file-name>.csv '<Plot Title>'"
+    assert (
+        len(argv) == 3
+    ), "Incorrect usage: python plot.py <csv-file-name>.csv '<Plot Title>'"
     fileName = str(argv[1])
     plotTitle = str(argv[2])
 
-    x = []  
-    y = []  
+    x = []
+    y = []
     data = []
 
     with open(fileName, "r") as csvfile:
@@ -23,14 +26,14 @@ def make_plot():
 
     end = max(x)
 
-    polyModel = numpy.poly1d(numpy.polyfit(x, y, 17))
+    polyModel = numpy.poly1d(numpy.polyfit(x, y, 3))
     polyLine = numpy.linspace(1, end)
 
     # scatterplot
-    plt.scatter(x, y, color="g", marker="o")
+    plt.scatter(x, y, color="b", marker=".")
 
     # regression curve
-    plt.plot(polyLine, polyModel(polyLine))
+    plt.plot(polyLine, polyModel(polyLine), color="r")
 
     plt.xlabel(data[0][0])
     plt.ylabel(data[0][1])

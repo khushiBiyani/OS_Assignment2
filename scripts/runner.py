@@ -14,6 +14,8 @@ col1 = len(number_of_numbers_in_row)
 row1 = row1 + 1
 col2 = col2 + 1
 
+print(f"Running for: {row1} X {col1} X {col2} matrices")
+
 # Begin of Thread Count Iteration
 system("gcc -pthread p1.c -o p1")
 system("gcc -pthread p2.c -o p2")

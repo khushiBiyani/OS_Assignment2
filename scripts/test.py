@@ -13,3 +13,20 @@ for T in range(1, 11):
         != 0
     ):
         exit(-1)
+
+
+# Uncomment to generate CSV for Turnaround Time VS Workload
+# threadCount=1
+# for t in range(0,1000):
+#     i = randint(1, 1001)
+#     j = randint(1, 1001)
+#     k = randint(1, 1001)
+#     if (
+#         system(
+#             f"python3 scripts/singleRun.py {i} {j} {k} {threadCount}"
+#         )
+#         != 0
+#     ):
+#         exit(-1)
+#     else:
+#         print(f"{i}\t{j}\t{k}\n")
