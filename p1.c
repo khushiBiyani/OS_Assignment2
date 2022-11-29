@@ -61,6 +61,7 @@ struct shmseg {
     ll J;    // Col size of matrixOne == Col size of matrixTwo
     ll K;    // Row size of matrixTwo
     char outputFile[100];
+    bool sharedMemoryInitialized;
 };
 struct shmseg* shmp;
 
@@ -363,6 +364,7 @@ int main(int argc, char* argv[]) {
     shmp->J = J;
     shmp->K = K;
     strcpy(shmp->outputFile, outputFile);
+    shmp->sharedMemoryInitialized = true;
 
     preProcessFileOne();
     preProcessFileTwo();
