@@ -1,4 +1,5 @@
 #include <pthread.h>
+#include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -39,6 +40,7 @@ struct shmseg {
     ll J;    // Col size of matrixOne == Col size of matrixTwo
     ll K;    // Row size of matrixTwo
     char outputFile[100];
+    bool sharedMemoryInitialized;
 };
 struct shmseg* shmp;
 ll* visitedRowOne;    // marks rows of matrixOne as read from in1.txt
@@ -61,6 +63,9 @@ void connectSharedMemory() {
         perror("Shared memory attach");
         exit(-1);
     }
+
+    while (!shmp->sharedMemoryInitialized)
+        ;
 
     // Second shared memory segment - stores visitedRowOne
     SHM_KEY = ftok("./p1.c", 0x2);
