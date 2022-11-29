@@ -1,15 +1,27 @@
 #include <signal.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
+#include <time.h>
+
 
 #define PROCESS_ALIVE 0x141221
 
+static long long getCurrentTime(void) {
+    struct timespec ts;
+    timespec_get(&ts, TIME_UTC);
+    return (long long) ts.tv_sec * 1000000000ll + ts.tv_nsec;
+}
+
 int main(int argc, char* argv[]) {
+    FILE *fptr;
+    long long start_time=0,end_time=0;
+    long long diff=0,count=0;
     if (argc != 7 && argc != 8) {
         printf("Usage: ./sched i j k in1.txt in2.txt out.txt [MAXTHREADS]\n");
         exit(-1);
@@ -44,8 +56,10 @@ int main(int argc, char* argv[]) {
     bool turn = 0;
     int processOneAlive = PROCESS_ALIVE;
     int processTwoAlive = PROCESS_ALIVE;
+    fptr = fopen("contextSwitch.txt", "w");
 
     while (1) {
+        start_time=getCurrentTime();
         waitpid(processOnePid, &processOneAlive, WNOHANG);
         waitpid(processTwoPid, &processTwoAlive, WNOHANG);
         if (processOneAlive == PROCESS_ALIVE && processTwoAlive == PROCESS_ALIVE) {
@@ -65,7 +79,12 @@ int main(int argc, char* argv[]) {
         }
         turn ^= 1;
         usleep(2000);
+        end_time=getCurrentTime();
+        count++;
+        diff+=end_time-start_time;
     }
+    fprintf(fptr, "%lld ", diff/count);
+    fclose(fptr);
 
     wait(NULL);
     wait(NULL);
