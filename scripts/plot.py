@@ -26,7 +26,7 @@ def make_plot():
 
     end = max(x)
 
-    polyModel = numpy.poly1d(numpy.polyfit(x, y, 15))
+    polyModel = numpy.poly1d(numpy.polyfit(x, y, 12))
     polyLine = numpy.linspace(1, end)
 
     # scatterplot
