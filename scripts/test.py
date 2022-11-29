@@ -2,7 +2,7 @@ from random import randint
 from os import system
 
 for T in range(1, 11):
-    i = randint(1, 50001)
+    i = randint(1, 5000)
     j = randint(1, 501)
     k = randint(1, 501)
     threadCount = randint(1, 51)

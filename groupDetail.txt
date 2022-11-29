@@ -1,0 +1,11 @@
+Group Members:
+1. Khooshrin Aspi Pithawalla - f20202067@hyderabad.bits-pilani.ac.in
+2. Ankesh Pandey - f20200104@hyderabad.bits-pilani.ac.in
+3. Kavyanjali Agnihotri - f20200185@hyderabad.bits-pilani.ac.in
+4. Tushar Brijesh Chenan - f20200253@hyderabad.bits-pilani.ac.in
+5. Khushi Biyani - f20200194@hyderabad.bits-pilani.ac.in
+6. Manik Arneja - f20200119@hyderabad.bits-pilani.ac.in
+
+Extra Requirements:
+Requires script folder along with the c files to be present during the demo.
+Scripts require python to be installed.
