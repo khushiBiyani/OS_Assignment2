@@ -16,9 +16,9 @@ system("python scripts/transpose.py")
 
 for n in range(1, 3):
     system(f"gcc -pthread p{n}.c -o p{n}")
-system("gcc scheduler.c -o sched")
+system("gcc group2_assignment2.c -o group2_assignment2.out")
 
-system(f"./sched {i} {j} {k} in1.txt in2.txt out.txt {threadCount}")
+system(f"./group2_assignment2.out {i} {j} {k} in1.txt in2.txt out.txt {threadCount}")
 
 with open("genOut.txt", "r") as file:
     genData = file.read().strip().split("\n")
@@ -35,4 +35,4 @@ if data != genData:
     exit(-1)
 else:
     print(f"Test Case (I: {i}, J: {j}, K: {k}, MAXTHREADS: {threadCount}) -> [AC]")
-    system("rm ./p1 ./p2 ./sched *.txt")
+    system("rm ./p1 ./p2 ./group2_assignment2.out *.txt")

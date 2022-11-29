@@ -11,7 +11,7 @@
 
 int main(int argc, char* argv[]) {
     if (argc != 7 && argc != 8) {
-        printf("Usage: ./sched i j k in1.txt in2.txt out.txt [MAXTHREADS]\n");
+        printf("Usage: ./group2_assignment2.out i j k in1.txt in2.txt out.txt [MAXTHREADS]\n");
         exit(-1);
     }
     char* I = argv[1];

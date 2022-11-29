@@ -8,17 +8,17 @@ Operating Systems (CS F372) Assignment (Post Midsem) @ BITS Pilani, Hyderabad Ca
 
 2. Run `scripts/transpose.py` to transpose the input in `in2.txt` to enable pre-processing.
 
-3. Compile `scheduler.c` into `./sched`, `p1.c` into `./p1` and `p2.c` into `./p2`.
+3. Compile `group2_assignment2.c` into `./group2_assignment2.out`, `p1.c` into `./p1` and `p2.c` into `./p2`.
 
-4. `./sched` will schedule `p1.c` and `p2.c` through a $Round \ Robin$ mechanism and compute the matrix product into `out.txt`.
+4. `./group2_assignment2.out` will schedule `p1.c` and `p2.c` through a $Round \ Robin$ mechanism and compute the matrix product into `out.txt`.
 
 # C Programs
 
-### scheduler.c
+### group2_assignment2.c
 
-To compile $scheduler.c$, use the command: `gcc scheduler.c -o sched`
+To compile $group2_assignment2.c$, use the command: `gcc group2_assignment2.c -o group2_assignment2.out`
 
-To run $scheduler.c$, use the command: `./sched i j k in1.txt in2.txt out.txt [MAXTHREADS]`
+To run $group2_assignment2.c$, use the command: `./group2_assignment2.out i j k in1.txt in2.txt out.txt [MAXTHREADS]`
 
 `in1.txt` contains a matrix of dimension $(i \times j)$
 
@@ -67,7 +67,7 @@ To run program $singleRun.py$, use the command: `python scripts/singleRun.py i j
 
 $i$, $j$ and $k$ denote the dimensions of the matrices in `in1.txt` and `in2.txt`.
 
-> `singleRun.py` automates running `./sched` against the inputs `i, j, k, MAXTHREADS` and verifies the output of `out.txt` against `genOut.txt`.
+> `singleRun.py` automates running `./group2_assignment2.out` against the inputs `i, j, k, MAXTHREADS` and verifies the output of `out.txt` against `genOut.txt`.
 
 ### runner.py
 
